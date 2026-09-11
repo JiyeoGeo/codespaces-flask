@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Calculadora</title>
+
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+
+<body>
+
+    <h1>Calculadora</h1>
+
+    <input type="number" id="a" placeholder="Valor A">
+
+    <select id="op">
+        <option value="+">+</option>
+        <option value="-">−</option>
+        <option value="*">×</option>
+        <option value="/">÷</option>
+    </select>
+
+    <input type="number" id="b" placeholder="Valor B">
+
+    <button onclick="calcular()">Calcular</button>
+
+    <script>
+        function calcular() {
+            let a = Number(document.getElementById("a").value);
+            let b = Number(document.getElementById("b").value);
+            let op = document.getElementById("op").value;
+
+            let resultado;
+
+            if (op == "+") resultado = a + b;
+            if (op == "-") resultado = a - b;
+            if (op == "*") resultado = a * b;
+            if (op == "/") resultado = a / b;
+
+            window.location.href = "/resultado?resultado=" + resultado;
+        }
+    </script>
+
+</body>
+
+</html>
