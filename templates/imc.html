@@ -39,12 +39,16 @@
         {{ "%.1f"|format(imc) }}
     </p>
 
-    <p>
-        <span title="IMC = peso dividido pela altura ao quadrado;">
-            ?
+    <p class="explicacao">
+        Os valores representam uma faixa de referência baseada
+        nos critérios utilizados pelo cálculo.
+        <span
+        class="info"
+        title="A faixa de referência utiliza IMC entre 18,5 e 24,9."
+        aria-label="Explicação sobre o peso de referência"
+        >
+        ?
         </span>
-
-        O IMC é calculado dividindo o peso pela altura ao quadrado.
     </p>
 
     <p>
@@ -112,12 +116,13 @@
             Obesidade
         </div>
 
-        <div
-            class="marcador"
-            style="left: {{ posicao_ponteiro }}%;"
-            title="Seu IMC: {{ '%.1f'|format(imc) }}"
+      <div>
+        class="marcador"
+        style="left: {{ posicao_ponteiro }}%;"
+        title="Seu IMC: {{ '%.1f'|format(imc) }}"
+        aria-label="Seu IMC está em {{ '%.1f'|format(imc) }}"
         >
-            ▲
+            ▼
         </div>
 
     </div>
@@ -137,14 +142,16 @@
         {{ "%.1f"|format(gordura) }}%
     </p>
 
-    <p>
-        <span
-            title="Estimativa calculada pela fórmula de Deurenberg usando IMC, idade e sexo."
-        >
-            ?
-        </span>
+    <p class="explicacao">
+    A estimativa utiliza a fórmula de Deurenberg.
 
-        A estimativa utiliza a fórmula de Deurenberg.
+    <span
+        class="info"
+        title="A fórmula de Deurenberg utiliza IMC, idade e sexo para estimar o percentual de gordura corporal."
+        aria-label="Explicação sobre a fórmula de Deurenberg"
+    >
+        ?
+    </span>
     </p>
 
     <p>
