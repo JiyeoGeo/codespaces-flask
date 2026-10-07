@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+
+{% block title %}Calculadora de IMC{% endblock %}
+
+{% block content %}
+
+<section>
+
+    <h1>Resultado do IMC</h1>
+
+    <p>
+        <strong>Peso:</strong>
+        {{ "%.1f"|format(peso) }} kg
+    </p>
+
+    <p>
+        <strong>Altura:</strong>
+        {{ "%.2f"|format(altura) }} m
+    </p>
+
+    <p>
+        <strong>Idade:</strong>
+        {{ idade }} anos
+    </p>
+
+    <p>
+        <strong>Sexo:</strong>
+        {{ sexo|capitalize }}
+    </p>
+
+</section>
+
+
+<section>
+
+    <h2>IMC</h2>
+
+    <p class="resultado">
+        {{ "%.1f"|format(imc) }}
+    </p>
+
+    <p>
+        <span title="IMC = peso dividido pela altura ao quadrado;">
+            ?
+        </span>
+
+        O IMC é calculado dividindo o peso pela altura ao quadrado.
+    </p>
+
+    <p>
+        Classificação:
+    </p>
+
+    <span class="badge {{ cor }}">
+        {{ classificacao }}
+    </span>
+
+</section>
+
+
+<section>
+
+    <h2>Peso de referência</h2>
+
+    <p>
+        Com base na faixa de IMC utilizada:
+    </p>
+
+    <p>
+        <strong>
+            {{ "%.1f"|format(peso_minimo) }}
+            kg
+            até
+            {{ "%.1f"|format(peso_maximo) }}
+            kg
+        </strong>
+    </p>
+
+    <p>
+        <span
+            title="Essa faixa é calculada utilizando os limites de IMC de 18,5 e 24,9."
+        >
+            ?
+        </span>
+
+        Os valores representam uma faixa de referência baseada
+        nos critérios utilizados pelo cálculo.
+    </p>
+
+</section>
+
+
+<section>
+
+    <h2>Régua de classificação</h2>
+
+    <div class="regua">
+
+        <div class="faixa magreza">
+            Magreza
+        </div>
+
+        <div class="faixa normal">
+            Normal
+        </div>
+
+        <div class="faixa sobrepeso">
+            Sobrepeso
+        </div>
+
+        <div class="faixa obesidade">
+            Obesidade
+        </div>
+
+        <div
+            class="marcador"
+            style="left: {{ posicao_ponteiro }}%;"
+            title="Seu IMC: {{ '%.1f'|format(imc) }}"
+        >
+            ▲
+        </div>
+
+    </div>
+
+    <p>
+        ▲ = seu IMC: {{ "%.1f"|format(imc) }}
+    </p>
+
+</section>
+
+
+<section>
+
+    <h2>Estimativa de gordura corporal</h2>
+
+    <p class="resultado">
+        {{ "%.1f"|format(gordura) }}%
+    </p>
+
+    <p>
+        <span
+            title="Estimativa calculada pela fórmula de Deurenberg usando IMC, idade e sexo."
+        >
+            ?
+        </span>
+
+        A estimativa utiliza a fórmula de Deurenberg.
+    </p>
+
+    <p>
+        <strong>Classificação:</strong>
+    </p>
+
+    <span class="badge">
+        {{ gordura_classificacao }}
+    </span>
+
+</section>
+
+
+<section>
+
+    <h2>Recomendação</h2>
+
+    <p>
+        {{ recomendacao }}
+    </p>
+
+</section>
+
+
+<section>
+
+    <h2>Fazer novo cálculo</h2>
+
+    <form
+        action="{{ url_for('calcular_imc') }}"
+        method="POST"
+    >
+
+        <label for="novo-peso">
+            Peso (kg):
+        </label>
+
+        <input
+            type="number"
+            id="novo-peso"
+            name="peso"
+            step="0.1"
+            min="1"
+            required
+        >
+
+        <label for="nova-altura">
+            Altura (cm):
+        </label>
+
+        <input
+            type="number"
+            id="nova-altura"
+            name="altura"
+            step="1"
+            min="50"
+            max="250"
+            placeholder="Ex.: 170"
+            required
+        >
+
+        <label for="nova-idade">
+            Idade:
+        </label>
+
+        <input
+            type="number"
+            id="nova-idade"
+            name="idade"
+            min="1"
+            required
+        >
+
+        <label for="novo-sexo">
+            Sexo:
+        </label>
+
+        <select
+            id="novo-sexo"
+            name="sexo"
+            required
+        >
+
+            <option value="">
+                Selecione
+            </option>
+
+            <option value="feminino">
+                Feminino
+            </option>
+
+            <option value="masculino">
+                Masculino
+            </option>
+
+        </select>
+
+        <button type="submit">
+            Calcular novamente
+        </button>
+
+    </form>
+
+</section>
+
+
+<section>
+
+    <a href="{{ url_for('profile') }}">
+        Voltar para o perfil
+    </a>
+
+</section>
+
+{% endblock %}

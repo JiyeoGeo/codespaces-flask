@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Perfil{% endblock %}
+
+{% block content %}
+
+<section>
+
+    <div class="avatar">
+        {{ usuario.nome[0].upper() }}
+    </div>
+
+    <h1>{{ usuario.nome }}</h1>
+
+    <p>
+        <strong>E-mail:</strong>
+        {{ usuario.email }}
+    </p>
+
+    {% if "idade" in usuario %}
+        <p>
+            <strong>Idade:</strong>
+            {{ usuario["idade"] }} anos
+        </p>
+
+        <p>
+            <strong>Peso:</strong>
+            {{ "%.1f"|format(usuario["peso"]) }} kg
+        </p>
+
+        <p>
+            <strong>Altura:</strong>
+            {{ "%.2f"|format(usuario["altura"]) }} m
+        </p>
+
+        <p>
+            <strong>Sexo:</strong>
+            {{ usuario["sexo"]|capitalize }}
+        </p>
+    {% else %}
+
+        <p>
+            Ainda não há dados de IMC registrados.
+        </p>
+
+    {% endif %}
+
+</section>
+
+
+<section>
+
+    <h2>Minhas metas</h2>
+
+    <ul>
+        <li>Manter uma rotina saudável</li>
+        <li>Acompanhar meus dados</li>
+        <li>Realizar cálculos de acompanhamento</li>
+    </ul>
+
+</section>
+
+
+<section>
+
+    <h2>Calculadora de IMC</h2>
+
+    <p>
+        Informe seus dados para realizar o cálculo.
+    </p>
+
+    <form
+        action="{{ url_for('calcular_imc') }}"
+        method="POST"
+    >
+
+        <label for="peso">
+            Peso (kg):
+        </label>
+
+        <input
+            type="number"
+            id="peso"
+            name="peso"
+            step="0.1"
+            min="1"
+            required
+        >
+
+
+        <label for="altura">
+           Altura (cm):
+        </label>
+
+        <input
+           type="number"
+           id="altura"
+           name="altura"
+           step="1"
+           min="50"
+           max="250"
+           placeholder="Ex.: 170"
+           required
+        >
+
+
+        <label for="idade">
+            Idade:
+        </label>
+
+        <input
+            type="number"
+            id="idade"
+            name="idade"
+            min="1"
+            required
+        >
+
+
+        <label for="sexo">
+            Sexo:
+        </label>
+
+        <select
+            id="sexo"
+            name="sexo"
+            required
+        >
+
+            <option value="">
+                Selecione
+            </option>
+
+            <option value="feminino">
+                Feminino
+            </option>
+
+            <option value="masculino">
+                Masculino
+            </option>
+
+        </select>
+
+
+        <button type="submit">
+            Calcular IMC
+        </button>
+
+    </form>
+
+</section>
+
+{% endblock %}

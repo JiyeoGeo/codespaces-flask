@@ -1,18 +1,82 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Página Inicial</title>
-    <link rel="icon" href="/static/favicon.ico">
-</head>
-<body>
+{% extends "base.html" %}
 
-    <h1>Olá! Esta é a página inicial.</h1>
+{% block title %}Início{% endblock %}
 
-    <p>Meu primeiro aplicativo Flask com Templates.</p>
+{% block content %}
 
-    <a href="/sobre">Ir para a página Sobre</a>
-    <br>
-    <a href="/calculadora">Ir para a calculadora</a>
-</body>
-</html>
+<section>
+
+    <h1>Portal Saúde & Bem-Estar</h1>
+
+    <p>
+        Bem-vindo ao nosso portal.
+    </p>
+
+</section>
+
+
+<section>
+
+    <h2>Calculadora Matemática</h2>
+
+    <form
+        action="{{ url_for('calcular') }}"
+        method="POST"
+    >
+
+        <input
+            type="number"
+            name="a"
+            step="any"
+            placeholder="Primeiro número"
+            required
+        >
+
+        <select name="op">
+
+            <option value="soma">
+                Soma
+            </option>
+
+            <option value="subtracao">
+                Subtração
+            </option>
+
+            <option value="multiplicacao">
+                Multiplicação
+            </option>
+
+            <option value="divisao">
+                Divisão
+            </option>
+
+        </select>
+
+        <input
+            type="number"
+            name="b"
+            step="any"
+            placeholder="Segundo número"
+            required
+        >
+
+        <button type="submit">
+            Calcular
+        </button>
+
+    </form>
+
+</section>
+
+
+<section>
+
+    <h2>Calculadora de IMC</h2>
+
+    <a href="{{ url_for('login') }}">
+        Acessar
+    </a>
+
+</section>
+
+{% endblock %}
