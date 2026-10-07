@@ -142,10 +142,40 @@ a {
     background: #fecaca;
 }
 
-
 /* =========================
-   RÉGUA DO IMC
+   ÍCONES DE INFORMAÇÃO
    ========================= */
+
+.explicacao {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 20px;
+    height: 20px;
+
+    border: 2px solid #2563eb;
+    border-radius: 50%;
+
+    color: #2563eb;
+    font-size: 13px;
+    font-weight: bold;
+
+    cursor: help;
+
+    flex-shrink: 0;
+}
+
+.info:hover {
+    background: #2563eb;
+    color: white;
+}
 
 /* =========================
    RÉGUA DO IMC
