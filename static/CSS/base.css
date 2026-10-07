@@ -147,42 +147,82 @@ a {
    RÉGUA DO IMC
    ========================= */
 
+/* =========================
+   RÉGUA DO IMC
+   ========================= */
+
 .regua {
-    display: flex;
     position: relative;
     width: 100%;
-    height: 45px;
-    margin: 35px 0 20px;
-    border-radius: 8px;
+    height: 48px;
+    margin: 45px 0 25px;
+    border-radius: 12px;
     overflow: visible;
+
+    /*
+     * A régua representa IMC de 10 até 40.
+     *
+     * 10 → 18,5 = 28,33%
+     * 18,5 → 25 = 21,67%
+     * 25 → 30 = 16,67%
+     * 30 → 40 = 33,33%
+     *
+     * Os gradientes intermediários deixam
+     * as transições mais suaves.
+     */
+    background: linear-gradient(
+        to right,
+        #60a5fa 0%,
+        #60a5fa 26%,
+        #4ade80 31%,
+        #4ade80 47%,
+        #facc15 52%,
+        #facc15 61%,
+        #ef4444 66%,
+        #ef4444 100%
+    );
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, 0.15);
 }
 
+/*
+ * As faixas continuam no HTML para manter
+ * os nomes das categorias.
+ */
 .faixa {
-    height: 45px;
-    display: grid;
-    place-items: center;
+    position: absolute;
+    top: 0;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     font-size: 12px;
     font-weight: bold;
+
+    pointer-events: none;
 }
 
 .magreza {
+    left: 0;
     width: 28.33%;
-    background: #60a5fa;
 }
 
 .normal {
+    left: 28.33%;
     width: 21.67%;
-    background: #4ade80;
 }
 
 .sobrepeso {
+    left: 50%;
     width: 16.67%;
-    background: #facc15;
 }
 
 .obesidade {
+    left: 66.67%;
     width: 33.33%;
-    background: #ef4444;
 }
 
 
@@ -192,11 +232,33 @@ a {
 
 .marcador {
     position: absolute;
-    top: -30px;
+
+    /*
+     * O marcador fica acima da régua.
+     */
+    top: -34px;
+
+    /*
+     * O centro do marcador coincide
+     * exatamente com a posição calculada.
+     */
     transform: translateX(-50%);
-    font-size: 24px;
+
+    font-size: 26px;
     font-weight: bold;
-    z-index: 10;
+
+    color: #111827;
+
+    z-index: 20;
+
+    /*
+     * Pequeno brilho para destacar
+     * o marcador.
+     */
+    text-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.35);
+
+    transition: left 0.3s ease;
 }
 
 
