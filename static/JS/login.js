@@ -1,3 +1,5 @@
+console.log("MEU LOGIN.JS FOI CARREGADO!");
+
 function mostrarSenha() {
 
     const senha = document.getElementById("senha");
