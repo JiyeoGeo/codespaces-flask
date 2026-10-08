@@ -1,146 +1,294 @@
+/* =========================
+   RESET
+   ========================= */
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
-body {
-    font-family: Arial, sans-serif;
-    background: #eef2f7;
-    color: #1f2937;
+html {
+    scroll-behavior: smooth;
 }
 
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(135deg, #eef5ff, #f8fafc);
+    color: #1e293b;
+    min-height: 100vh;
+}
+
+
+/* =========================
+   CABEÇALHO
+   ========================= */
+
 header {
-    background: #1f2937;
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
     padding: 18px 5%;
+    box-shadow: 0 4px 18px rgba(30, 58, 138, 0.25);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 nav {
+    max-width: 1100px;
+    margin: auto;
+
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 20px;
 }
 
 nav a {
     color: white;
     text-decoration: none;
     font-weight: bold;
+    transition: 0.2s ease;
+}
+
+nav a:hover {
+    opacity: 0.8;
 }
 
 .menu {
     display: flex;
-    gap: 20px;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
 }
+
+
+/* =========================
+   CONTEÚDO PRINCIPAL
+   ========================= */
 
 main {
     width: 90%;
-    max-width: 900px;
-    margin: 35px auto;
+    max-width: 950px;
+    margin: 45px auto;
 }
+
+
+/* =========================
+   SEÇÕES / CARDS
+   ========================= */
 
 section {
-    background: white;
-    padding: 25px;
-    margin-bottom: 20px;
-    border-radius: 14px;
-    box-shadow: 0 3px 12px #00000012;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    margin-bottom: 25px;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+
+    box-shadow:
+        0 8px 25px rgba(15, 23, 42, 0.08);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
+section:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 12px 30px rgba(15, 23, 42, 0.11);
+}
+
+
+/* =========================
+   TÍTULOS
+   ========================= */
+
 h1 {
-    color: #1e3a5f;
-    margin-bottom: 15px;
+    color: #172554;
+    font-size: 32px;
+    margin-bottom: 18px;
 }
 
 h2 {
-    color: #2563eb;
-    margin-bottom: 12px;
+    color: #1d4ed8;
+    font-size: 22px;
+    margin-bottom: 15px;
+}
+
+h3 {
+    color: #1e293b;
 }
 
 p {
-    line-height: 1.6;
-    margin-bottom: 10px;
+    line-height: 1.7;
+    margin-bottom: 12px;
+    color: #475569;
 }
+
+
+/* =========================
+   LINKS
+   ========================= */
+
+a {
+    color: #2563eb;
+    transition: 0.2s ease;
+}
+
+a:hover {
+    color: #1d4ed8;
+}
+
+
+/* =========================
+   FORMULÁRIOS
+   ========================= */
 
 form {
     display: grid;
-    gap: 10px;
+    gap: 13px;
+}
+
+label {
+    color: #334155;
+    font-weight: bold;
+    margin-top: 5px;
 }
 
 input,
 select,
 button {
-    padding: 11px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
+    width: 100%;
+    padding: 13px 14px;
+
+    border-radius: 10px;
     font-size: 15px;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.15s ease;
 }
 
+input,
+select {
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #1e293b;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+
+    border-color: #2563eb;
+
+    box-shadow:
+        0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+
+/* =========================
+   BOTÕES
+   ========================= */
+
 button {
-    background: #2563eb;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
     color: white;
+
     border: none;
+
     font-weight: bold;
     cursor: pointer;
+
+    box-shadow:
+        0 5px 12px rgba(37, 99, 235, 0.25);
 }
 
 button:hover {
-    background: #1d4ed8;
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 7px 16px rgba(37, 99, 235, 0.3);
 }
 
-a {
-    color: #2563eb;
+button:active {
+    transform: translateY(0);
 }
+
+
+/* =========================
+   CAMPO DE SENHA
+   ========================= */
 
 .senha-container {
     display: flex;
-    gap: 5px;
+    gap: 8px;
 }
 
 .senha-container input {
     flex: 1;
 }
 
-.avatar {
-    width: 65px;
-    height: 65px;
-    display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: #2563eb;
-    color: white;
-    font-size: 25px;
-    font-weight: bold;
-    margin-bottom: 12px;
-}
+
+/* =========================
+   RESULTADO
+   ========================= */
 
 .resultado {
-    font-size: 32px;
+    font-size: 36px;
     font-weight: bold;
     color: #2563eb;
+
+    margin: 10px 0;
 }
+
+
+/* =========================
+   BADGES DO IMC
+   ========================= */
 
 .badge {
     display: inline-block;
-    padding: 7px 14px;
-    border-radius: 20px;
+
+    padding: 8px 16px;
+
+    border-radius: 999px;
+
     font-weight: bold;
+    font-size: 14px;
+
+    border: 1px solid transparent;
 }
 
 .azul {
-    background: #bfdbfe;
+    background: #dbeafe;
+    color: #1e40af;
+    border-color: #93c5fd;
 }
 
 .verde {
-    background: #bbf7d0;
+    background: #dcfce7;
+    color: #166534;
+    border-color: #86efac;
 }
 
 .amarelo {
-    background: #fef08a;
+    background: #fef9c3;
+    color: #854d0e;
+    border-color: #fde047;
 }
 
 .vermelho {
-    background: #fecaca;
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
 }
+
 
 /* =========================
    EQUIPE
@@ -149,30 +297,85 @@ a {
 .equipe {
     display: flex;
     flex-wrap: wrap;
-    gap: 25px;
-    margin-top: 20px;
+    gap: 20px;
+    margin-top: 25px;
 }
 
 .membro {
-    flex: 1 1 180px;
+    flex: 1 1 200px;
+
     text-align: center;
-    padding: 20px;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
+
+    padding: 25px 20px;
+
+    background: linear-gradient(
+        180deg,
+        #ffffff,
+        #f8fafc
+    );
+
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+
+    box-shadow:
+        0 5px 15px rgba(15, 23, 42, 0.06);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.membro:hover {
+    transform: translateY(-5px);
+
+    box-shadow:
+        0 12px 25px rgba(15, 23, 42, 0.12);
 }
 
 .membro .avatar {
-    margin: 0 auto 12px;
+    margin: 0 auto 15px;
 }
 
 .membro h3 {
-    margin-bottom: 5px;
+    margin-bottom: 7px;
 }
 
 .membro p {
-    color: #6b7280;
+    color: #64748b;
     font-size: 14px;
 }
+
+
+/* =========================
+   AVATAR
+   ========================= */
+
+.avatar {
+    width: 70px;
+    height: 70px;
+
+    display: grid;
+    place-items: center;
+
+    margin-bottom: 14px;
+
+    border-radius: 50%;
+
+    background: linear-gradient(
+        135deg,
+        #2563eb,
+        #1e40af
+    );
+
+    color: white;
+
+    font-size: 26px;
+    font-weight: bold;
+
+    box-shadow:
+        0 6px 15px rgba(37, 99, 235, 0.25);
+}
+
 
 /* =========================
    ÍCONES DE INFORMAÇÃO
@@ -181,33 +384,43 @@ a {
 .explicacao {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
 }
 
 .info {
     display: inline-flex;
+
     align-items: center;
     justify-content: center;
 
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
 
     border: 2px solid #2563eb;
     border-radius: 50%;
 
     color: #2563eb;
+
     font-size: 13px;
     font-weight: bold;
 
     cursor: help;
 
     flex-shrink: 0;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
 }
 
 .info:hover {
     background: #2563eb;
     color: white;
+
+    transform: scale(1.08);
 }
+
 
 /* =========================
    RÉGUA DO IMC
@@ -215,23 +428,16 @@ a {
 
 .regua {
     position: relative;
+
     width: 100%;
     height: 48px;
+
     margin: 45px 0 25px;
-    border-radius: 12px;
+
+    border-radius: 14px;
+
     overflow: visible;
 
-    /*
-     * A régua representa IMC de 10 até 40.
-     *
-     * 10 → 18,5 = 28,33%
-     * 18,5 → 25 = 21,67%
-     * 25 → 30 = 16,67%
-     * 30 → 40 = 33,33%
-     *
-     * Os gradientes intermediários deixam
-     * as transições mais suaves.
-     */
     background: linear-gradient(
         to right,
         #60a5fa 0%,
@@ -245,15 +451,17 @@ a {
     );
 
     box-shadow:
-        0 3px 10px rgba(0, 0, 0, 0.15);
+        0 6px 15px rgba(15, 23, 42, 0.16);
 }
 
-/*
- * As faixas continuam no HTML para manter
- * os nomes das categorias.
- */
+
+/* =========================
+   FAIXAS DA RÉGUA
+   ========================= */
+
 .faixa {
     position: absolute;
+
     top: 0;
     height: 48px;
 
@@ -263,6 +471,8 @@ a {
 
     font-size: 12px;
     font-weight: bold;
+
+    color: #1e293b;
 
     pointer-events: none;
 }
@@ -289,7 +499,7 @@ a {
 
 
 /* =========================
-   PONTEIRO
+   PONTEIRO DO IMC
    ========================= */
 
 .marcador {
@@ -302,14 +512,15 @@ a {
     font-size: 26px;
     font-weight: bold;
 
-    color: #111827;
+    color: #0f172a;
 
     z-index: 20;
 
     text-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.35);
+        0 2px 4px rgba(0, 0, 0, 0.25);
 
-    transition: left 0.3s ease;
+    transition:
+        left 0.3s ease;
 }
 
 
@@ -318,8 +529,84 @@ a {
    ========================= */
 
 footer {
-    background: #1f2937;
+    margin-top: 50px;
+
+    background: linear-gradient(
+        135deg,
+        #172554,
+        #1e3a8a
+    );
+
     color: white;
+
     text-align: center;
-    padding: 18px;
+
+    padding: 25px 18px;
+
+    box-shadow:
+        0 -5px 20px rgba(15, 23, 42, 0.08);
+}
+
+footer p {
+    color: #dbeafe;
+}
+
+
+/* =========================
+   RESPONSIVIDADE
+   ========================= */
+
+@media (max-width: 700px) {
+
+    header {
+        padding: 16px 5%;
+    }
+
+    nav {
+        flex-direction: column;
+    }
+
+    .menu {
+        justify-content: center;
+        gap: 15px;
+    }
+
+    main {
+        width: 92%;
+        margin: 30px auto;
+    }
+
+    section {
+        padding: 22px;
+        border-radius: 15px;
+    }
+
+    h1 {
+        font-size: 27px;
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+
+    .equipe {
+        flex-direction: column;
+    }
+
+    .membro {
+        width: 100%;
+    }
+
+    .regua {
+        height: 44px;
+    }
+
+    .faixa {
+        height: 44px;
+        font-size: 10px;
+    }
+
+    .resultado {
+        font-size: 30px;
+    }
 }
