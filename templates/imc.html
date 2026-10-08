@@ -116,16 +116,45 @@
             Obesidade
         </div>
         
-        <div
+        <div class="regua">
+
+    <div class="faixa magreza">
+        Magreza
+    </div>
+
+    <div class="faixa normal">
+        Normal
+    </div>
+
+    <div class="faixa sobrepeso">
+        Sobrepeso
+    </div>
+
+    <div class="faixa obesidade">
+        Obesidade
+    </div>
+
+    <div
         class="marcador"
-        style="left: {{ posicao_ponteiro }}%;"
+        data-posicao="{{ posicao_ponteiro }}"
         title="Seu IMC: {{ '%.1f'|format(imc) }}"
         aria-label="Seu IMC está em {{ '%.1f'|format(imc) }}"
-        >
-            ▼
-        </div>
-
+    >
+        ▼
     </div>
+</div>
+
+<script>
+    const marcador = document.querySelector(".marcador");
+
+    if (marcador) {
+        const posicao = parseFloat(marcador.dataset.posicao);
+
+        if (!isNaN(posicao)) {
+            marcador.style.left = posicao + "%";
+        }
+    }
+</script>
 
     <p>
         ▲ = seu IMC: {{ "%.1f"|format(imc) }}
