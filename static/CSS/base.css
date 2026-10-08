@@ -295,15 +295,10 @@ a {
 .marcador {
     position: absolute;
 
-    /*
-     * O marcador fica acima da régua.
-     */
+    left: var(--posicao-ponteiro);
+
     top: -34px;
 
-    /*
-     * O centro do marcador coincide
-     * exatamente com a posição calculada.
-     */
     transform: translateX(-50%);
 
     font-size: 26px;
@@ -313,10 +308,6 @@ a {
 
     z-index: 20;
 
-    /*
-     * Pequeno brilho para destacar
-     * o marcador.
-     */
     text-shadow:
         0 1px 3px rgba(0, 0, 0, 0.35);
 
