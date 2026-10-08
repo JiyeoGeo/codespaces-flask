@@ -51,29 +51,4 @@
     </form>
 </section>
 
-<script>
-function mostrarSenha() {
-    const senha = document.getElementById("senha");
-
-    if (senha.type === "password") {
-        senha.type = "text";
-    } else {
-        senha.type = "password";
-    }
-}
-
-const senha = document.getElementById("senha");
-const aviso = document.getElementById("caps-lock");
-
-senha.addEventListener("keydown", verificarCaps);
-senha.addEventListener("keyup", verificarCaps);
-
-function verificarCaps(event) {
-    aviso.style.display =
-        event.getModifierState("CapsLock")
-        ? "block"
-        : "none";
-}
-</script>
-
 {% endblock %}
