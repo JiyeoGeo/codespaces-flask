@@ -229,16 +229,16 @@ def imc(peso, altura, idade, sexo):
     IMC_MAXIMO_REGUA = 40
 
     if valor_imc <= IMC_MINIMO_REGUA:
-    posicao_ponteiro = 0
+        posicao_ponteiro = 0
 
     elif valor_imc >= IMC_MAXIMO_REGUA:
-    posicao_ponteiro = 100
+        posicao_ponteiro = 100
 
     else:
-    posicao_ponteiro = (
-        (valor_imc - IMC_MINIMO_REGUA)
-        / (IMC_MAXIMO_REGUA - IMC_MINIMO_REGUA)
-    ) * 100
+        posicao_ponteiro = (
+            (valor_imc - IMC_MINIMO_REGUA)
+            / (IMC_MAXIMO_REGUA - IMC_MINIMO_REGUA)
+            ) * 100
 
     # =========================
     # PESO DE REFERÊNCIA
