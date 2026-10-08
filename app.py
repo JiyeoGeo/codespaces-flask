@@ -91,7 +91,7 @@ def calcular():
     )
 
 
-@app.route("/math/<op>/<float:a>/<float:b>")
+@app.route("/math/<op>/<float(signed=True):a>/<float(signed=True):b>")
 def math(op, a, b):
 
     if op == "soma":
