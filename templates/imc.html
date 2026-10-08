@@ -81,7 +81,7 @@
     </p>
 
     <p>
-        <span
+        <span class="info"
             title="Essa faixa é calculada utilizando os limites de IMC de 18,5 e 24,9."
         >
             ?
@@ -117,7 +117,7 @@
 
         <div
             class="marcador"
-            data-posicao="{{ posicao_ponteiro }}"
+            style="left: {{ posicao_ponteiro }}%;"
             title="Seu IMC: {{ '%.1f'|format(imc) }}"
             aria-label="Seu IMC está em {{ '%.1f'|format(imc) }}"
         >

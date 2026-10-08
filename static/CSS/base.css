@@ -295,8 +295,6 @@ a {
 .marcador {
     position: absolute;
 
-    left: var(--posicao-ponteiro);
-
     top: -34px;
 
     transform: translateX(-50%);
