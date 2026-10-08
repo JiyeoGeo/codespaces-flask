@@ -1,3 +1,6 @@
+const senha = document.getElementById("senha");
+const aviso = document.getElementById("caps-lock");
+
 function mostrarSenha() {
 
     const senha = document.getElementById("senha");
@@ -12,11 +15,6 @@ function mostrarSenha() {
 
     }
 }
-
-
-const senha = document.getElementById("senha");
-const aviso = document.getElementById("caps-lock");
-
 
 function atualizarCapsLock(event) {
 
