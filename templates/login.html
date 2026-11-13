@@ -7,15 +7,11 @@
 <section>
     <h1>Login</h1>
 
-    <form method="POST">
+    {% if erro %}
+        <p style="color: red;">{{ erro }}</p>
+    {% endif %}
 
-        <label for="nome">Nome:</label>
-        <input
-            type="text"
-            id="nome"
-            name="nome"
-            required
-        >
+    <form method="POST">
 
         <label for="email">E-mail:</label>
         <input
@@ -44,11 +40,21 @@
             Caps Lock ativado
         </p>
 
+        <label>
+            <input type="checkbox" name="lembrar">
+            Lembrar de mim (sessão permanente)
+        </label>
+
         <button type="submit">
             Entrar
         </button>
 
     </form>
+
+    <p>
+        Não tem conta?
+        <a href="{{ url_for('cadastro') }}">Cadastre-se</a>
+    </p>
 </section>
 
 <script src="{{ url_for('static', filename='JS/login.js') }}"></script>

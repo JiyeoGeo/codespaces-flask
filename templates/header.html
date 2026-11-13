@@ -16,13 +16,31 @@
                 Sobre
             </a>
 
-            <a href="{{ url_for('login') }}">
-                Login
-            </a>
+            {% if session.get('usuario_id') %}
 
-            <a href="{{ url_for('profile') }}">
-                Perfil
-            </a>
+                <a href="{{ url_for('profile') }}">
+                    Perfil
+                </a>
+
+                <a href="{{ url_for('listar') }}">
+                    Usuários
+                </a>
+
+                <a href="{{ url_for('logout') }}">
+                    Sair ({{ session.get('usuario_nome') }})
+                </a>
+
+            {% else %}
+
+                <a href="{{ url_for('login') }}">
+                    Login
+                </a>
+
+                <a href="{{ url_for('cadastro') }}">
+                    Cadastrar
+                </a>
+
+            {% endif %}
 
         </div>
 

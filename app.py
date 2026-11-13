@@ -1,6 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from datetime import timedelta
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, session
 
 app = Flask(__name__)
+
+# Chave secreta: necessária para o Flask assinar o cookie da sessão
+app.secret_key = "chave-secreta-do-portal"
+
+# Tempo de vida da sessão quando ela é permanente ("Lembrar de mim")
+app.permanent_session_lifetime = timedelta(minutes=30)
 
 # FAVICON
 @app.route("/favicon.ico")
@@ -11,8 +18,26 @@ def favicon():
     )
 
 
-# Dados do usuário durante a execução
-usuario = {}
+# =========================
+# USUÁRIOS (DICIONÁRIO TEMPORÁRIO)
+# =========================
+# Os dados se perdem ao reiniciar o servidor.
+# Os dados do IMC (peso, altura, idade, sexo) também
+# ficam dentro do dicionário do próprio usuário.
+
+usuarios = {}      # {id: {"nome": ..., "email": ..., "senha": ...}}
+proximo_id = 1
+
+
+def email_existe(email, ignorar_id=None):
+    for id_usuario, dados in usuarios.items():
+        if dados["email"] == email and id_usuario != ignorar_id:
+            return True
+    return False
+
+
+def logado():
+    return session.get("usuario_id") in usuarios
 
 
 # =========================
@@ -34,24 +59,71 @@ def about():
 
 
 # =========================
+# CREATE - CADASTRAR
+# =========================
+
+@app.route("/cadastro", methods=["GET", "POST"])
+def cadastro():
+    global proximo_id
+
+    if request.method == "POST":
+        nome = request.form["nome"]
+        email = request.form["email"]
+        senha = request.form["senha"]
+
+        if email_existe(email):
+            return render_template("cadastro.html", erro="E-mail já cadastrado.")
+
+        usuarios[proximo_id] = {"nome": nome, "email": email, "senha": senha}
+        proximo_id += 1
+
+        return redirect(url_for("login"))
+
+    return render_template("cadastro.html")
+
+
+# =========================
 # LOGIN
 # =========================
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    global usuario
 
     if request.method == "POST":
+        email = request.form["email"]
+        senha = request.form["senha"]
 
-        usuario = {
-            "nome": request.form["nome"],
-            "email": request.form["email"],
-            "senha": request.form["senha"]
-        }
+        for id_usuario, dados in usuarios.items():
+            if dados["email"] == email and dados["senha"] == senha:
 
-        return redirect(url_for("profile"))
+                # Guarda dados na sessão
+                session["usuario_id"] = id_usuario
+                session["usuario_nome"] = dados["nome"]
+
+                # Sessão permanente (expira em 30 min) ou temporária
+                # (termina ao fechar o navegador), conforme a caixa marcada
+                if request.form.get("lembrar"):
+                    session.permanent = True
+                else:
+                    session.permanent = False
+
+                return redirect(url_for("profile"))
+
+        return render_template("login.html", erro="E-mail ou senha incorretos.")
 
     return render_template("login.html")
+
+
+# =========================
+# LOGOUT
+# =========================
+
+@app.route("/logout")
+def logout():
+    # Remove apenas as chaves do login
+    session.pop("usuario_id", None)
+    session.pop("usuario_nome", None)
+    return redirect(url_for("login"))
 
 
 # =========================
@@ -61,13 +133,97 @@ def login():
 @app.route("/profile")
 def profile():
 
-    if not usuario:
+    if not logado():
         return redirect(url_for("login"))
 
     return render_template(
         "profile.html",
-        usuario=usuario
+        usuario=usuarios[session["usuario_id"]]
     )
+
+
+# =========================
+# READ - LISTAR USUÁRIOS
+# =========================
+
+@app.route("/usuarios")
+def listar():
+    if not logado():
+        return redirect(url_for("login"))
+
+    return render_template("usuarios.html", usuarios=usuarios)
+
+
+# =========================
+# READ - CONSULTAR UM USUÁRIO
+# =========================
+
+@app.route("/usuarios/<int:id_usuario>")
+def consultar(id_usuario):
+    if not logado():
+        return redirect(url_for("login"))
+
+    if id_usuario not in usuarios:
+        return redirect(url_for("listar"))
+
+    return render_template("usuario.html", id_usuario=id_usuario,
+                           usuario=usuarios[id_usuario])
+
+
+# =========================
+# UPDATE - EDITAR USUÁRIO
+# =========================
+
+@app.route("/usuarios/<int:id_usuario>/editar", methods=["GET", "POST"])
+def editar(id_usuario):
+    if not logado():
+        return redirect(url_for("login"))
+
+    if id_usuario not in usuarios:
+        return redirect(url_for("listar"))
+
+    if request.method == "POST":
+        nome = request.form["nome"]
+        email = request.form["email"]
+        senha = request.form["senha"]
+
+        if email_existe(email, ignorar_id=id_usuario):
+            return render_template("editar.html", id_usuario=id_usuario,
+                                   usuario=usuarios[id_usuario],
+                                   erro="E-mail já cadastrado.")
+
+        # Atualiza só estes campos (os dados do IMC são mantidos)
+        usuarios[id_usuario]["nome"] = nome
+        usuarios[id_usuario]["email"] = email
+        usuarios[id_usuario]["senha"] = senha
+
+        # Se editou o próprio usuário, atualiza o nome guardado na sessão
+        if id_usuario == session.get("usuario_id"):
+            session["usuario_nome"] = nome
+
+        return redirect(url_for("listar"))
+
+    return render_template("editar.html", id_usuario=id_usuario,
+                           usuario=usuarios[id_usuario])
+
+
+# =========================
+# DELETE - EXCLUIR USUÁRIO
+# =========================
+
+@app.route("/usuarios/<int:id_usuario>/excluir", methods=["POST"])
+def excluir(id_usuario):
+    if not logado():
+        return redirect(url_for("login"))
+
+    usuarios.pop(id_usuario, None)
+
+    # Se excluiu a própria conta, encerra toda a sessão
+    if id_usuario == session.get("usuario_id"):
+        session.clear()
+        return redirect(url_for("login"))
+
+    return redirect(url_for("listar"))
 
 
 # =========================
@@ -143,7 +299,8 @@ def math(op, a, b):
 @app.route("/calcular-imc", methods=["POST"])
 def calcular_imc():
 
-    global usuario
+    if not logado():
+        return redirect(url_for("login"))
 
     peso = float(request.form["peso"])
 
@@ -154,7 +311,8 @@ def calcular_imc():
     idade = int(request.form["idade"])
     sexo = request.form["sexo"]
 
-    # Atualiza os dados do usuário
+    # Atualiza os dados do usuário logado
+    usuario = usuarios[session["usuario_id"]]
     usuario["peso"] = peso
     usuario["altura"] = altura
     usuario["idade"] = idade
@@ -178,7 +336,7 @@ def calcular_imc():
 @app.route("/imc/<float:peso>/<float:altura>/<int:idade>/<sexo>")
 def imc(peso, altura, idade, sexo):
 
-    if not usuario:
+    if not logado():
         return redirect(url_for("login"))
 
     # =========================
