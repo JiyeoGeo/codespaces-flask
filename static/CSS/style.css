@@ -513,3 +513,18 @@ a {
     nav, .menu { flex-wrap: wrap; gap: 12px; }
     .menu { justify-content: flex-start; }
 }
+
+/* Aviso de Caps Lock */
+.aviso-caps {
+    display: block;
+    color: #8a4b08;
+    background: #fff3cd;
+    padding: 9px;
+    border-radius: 7px;
+    margin: 0;
+}
+
+/* Garante que o atributo hidden seja respeitado */
+.aviso-caps[hidden] {
+    display: none !important;
+}
