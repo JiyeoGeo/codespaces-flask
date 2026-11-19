@@ -452,9 +452,39 @@ a {
 }
 
 /* Complementos de autenticação e administração */
-.logo a { color: #fff; text-decoration: none; }
-.nav-logout { display: inline; }
-.nav-logout button { padding: 5px 10px; background: transparent; color: #fff; }
+/* Complementos de autenticação e administração */
+.logo a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.menu {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-logout {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    gap: 0;
+}
+
+.nav-logout button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+    margin: 0;
+    background: transparent;
+    color: #fff;
+    border: none;
+    font-weight: bold;
+    font-size: 15px;
+    cursor: pointer;
+}
 .form-card { max-width: 520px; margin: 25px auto; }
 .form-card form { gap: 9px; }
 .form-card label { font-weight: 600; }
