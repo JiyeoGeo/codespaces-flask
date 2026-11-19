@@ -1,153 +1,34 @@
 {% extends "base.html" %}
-
-{% block title %}Perfil{% endblock %}
-
+{% block title %}Meu perfil{% endblock %}
 {% block content %}
-
-<section>
-
-    <div class="avatar">
-        {{ usuario.nome[0].upper() }}
-    </div>
-
+<section class="perfil-card">
+    <img class="foto-perfil" src="{{ url_for('static', filename=usuario.foto_perfil.replace('static/', '')) }}" alt="Foto de perfil">
     <h1>{{ usuario.nome }}</h1>
-
-    <p>
-        <strong>E-mail:</strong>
-        {{ usuario.email }}
-    </p>
-
-    {% if "idade" in usuario %}
-        <p>
-            <strong>Idade:</strong>
-            {{ usuario["idade"] }} anos
-        </p>
-
-        <p>
-            <strong>Peso:</strong>
-            {{ "%.1f"|format(usuario["peso"]) }} kg
-        </p>
-
-        <p>
-            <strong>Altura:</strong>
-            {{ "%.2f"|format(usuario["altura"]) }} m
-        </p>
-
-        <p>
-            <strong>Sexo:</strong>
-            {{ usuario["sexo"]|capitalize }}
-        </p>
-    {% else %}
-
-        <p>
-            Ainda não há dados de IMC registrados.
-        </p>
-
-    {% endif %}
-
+    <p><strong>E-mail:</strong> {{ usuario.email }}</p>
+    <p><strong>Função:</strong> {{ usuario.funcao|capitalize }}</p>
+    <p><strong>Cadastro:</strong> {{ usuario.data_cadastro }}</p>
+    {% if usuario.idade is defined %}
+        <p><strong>Idade:</strong> {{ usuario.idade }} anos</p>
+        <p><strong>Peso informado:</strong> {{ "%.1f"|format(usuario.peso) }} kg</p>
+        <p><strong>Altura informada:</strong> {{ "%.2f"|format(usuario.altura) }} m</p>
+        <p><strong>Sexo informado:</strong> {{ usuario.sexo|capitalize }}</p>
+    {% else %}<p>Ainda não há dados de IMC registrados.</p>{% endif %}
+    <a class="botao-link" href="{{ url_for('editar', id_usuario=usuario.id) }}">Editar perfil</a>
 </section>
-
-
 <section>
-
     <h2>Minhas metas</h2>
-
-    <ul>
-        <li>Manter uma rotina saudável</li>
-        <li>Acompanhar meus dados</li>
-        <li>Realizar cálculos de acompanhamento</li>
-    </ul>
-
+    <ul><li>Manter uma rotina saudável</li><li>Acompanhar meus dados</li><li>Realizar cálculos de acompanhamento</li></ul>
 </section>
-
-
 <section>
-
     <h2>Calculadora de IMC</h2>
-
-    <p>
-        Informe seus dados para realizar o cálculo.
-    </p>
-
-    <form
-        action="{{ url_for('calcular_imc') }}"
-        method="POST"
-    >
-
-        <label for="peso">
-            Peso (kg):
-        </label>
-
-        <input
-            type="number"
-            id="peso"
-            name="peso"
-            step="0.1"
-            min="1"
-            required
-        >
-
-
-        <label for="altura">
-           Altura (cm):
-        </label>
-
-        <input
-           type="number"
-           id="altura"
-           name="altura"
-           step="1"
-           min="50"
-           max="250"
-           placeholder="Ex.: 170"
-           required
-        >
-
-
-        <label for="idade">
-            Idade:
-        </label>
-
-        <input
-            type="number"
-            id="idade"
-            name="idade"
-            min="1"
-            required
-        >
-
-
-        <label for="sexo">
-            Sexo:
-        </label>
-
-        <select
-            id="sexo"
-            name="sexo"
-            required
-        >
-
-            <option value="">
-                Selecione
-            </option>
-
-            <option value="feminino">
-                Feminino
-            </option>
-
-            <option value="masculino">
-                Masculino
-            </option>
-
-        </select>
-
-
-        <button type="submit">
-            Calcular IMC
-        </button>
-
+    <p>Informe seus dados para realizar o cálculo.</p>
+    <form action="{{ url_for('calcular_imc') }}" method="POST">
+        <label for="peso">Peso (kg):</label><input type="number" id="peso" name="peso" step="0.1" min="1" required>
+        <label for="altura">Altura (cm):</label><input type="number" id="altura" name="altura" step="1" min="50" max="250" required>
+        <label for="idade">Idade:</label><input type="number" id="idade" name="idade" min="1" required>
+        <label for="sexo">Sexo:</label>
+        <select id="sexo" name="sexo" required><option value="">Selecione</option><option value="feminino">Feminino</option><option value="masculino">Masculino</option></select>
+        <button type="submit">Calcular IMC</button>
     </form>
-
 </section>
-
 {% endblock %}

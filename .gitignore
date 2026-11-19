@@ -1,1 +1,22 @@
+# Python e ambientes virtuais
 __pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Segredos e configurações locais
+.env
+.env.*
+!.env.example
+
+# Arquivos enviados pelos usuários (mantém a pasta no Git)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Arquivos temporários e editores
+*.tmp
+.vscode/
+.idea/
+.DS_Store

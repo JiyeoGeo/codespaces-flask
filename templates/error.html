@@ -1,16 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Erro 404</title>
-</head>
-<body>
-
-    <h1>404</h1>
-    <h2>Página não encontrada</h2>
-
-    <p>A página que você tentou acessar não existe.</p>
-
-    <a href="/">Voltar para o início</a>
-
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Erro {{ codigo or 404 }}{% endblock %}
+{% block content %}
+<section class="form-card">
+    <h1>HTTP {{ codigo or 404 }} — {{ titulo or 'Página não encontrada' }}</h1>
+    <p>{{ mensagem or 'A página solicitada não existe.' }}</p>
+    <a class="botao-link" href="{{ url_for('index') }}">Voltar ao início</a>
+    {% if codigo == 401 %}<a href="{{ url_for('login') }}">Ir para o login</a>{% endif %}
+</section>
+{% endblock %}

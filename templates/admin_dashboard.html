@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Painel administrativo{% endblock %}
+{% block content %}
+<section class="usuarios-section">
+    <div class="usuarios-header">
+        <div><span class="subtitulo">ADMINISTRAÇÃO</span><h1>Painel administrativo</h1><p>Gerenciamento de contas cadastradas no portal.</p></div>
+        <a class="botao-link" href="{{ url_for('admin_novo_usuario') }}">+ Novo usuário</a>
+    </div>
+    <div class="estatisticas">
+        <div><span>Total</span><strong>{{ total }}</strong></div>
+        <div><span>Ativos</span><strong>{{ ativos }}</strong></div>
+        <div><span>Desativados</span><strong>{{ excluidos }}</strong></div>
+        <div><span>Administradores</span><strong>{{ administradores }}</strong></div>
+    </div>
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+      {% for categoria, mensagem in mensagens %}<p class="mensagem {{ categoria }}">{{ mensagem }}</p>{% endfor %}
+    {% endwith %}
+    <div class="tabela-container">
+    <table class="tabela-usuarios">
+        <thead><tr><th>ID</th><th>Nome</th><th>E-mail</th><th>Função</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody>
+        {% for u in usuarios %}
+        <tr>
+            <td>#{{ u.id }}</td><td>{{ u.nome }}</td><td>{{ u.email }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('admin_alterar_funcao', user_id=u.id) }}" class="form-inline">
+                    <select name="funcao" aria-label="Função do usuário">
+                        <option value="comum" {% if u.funcao == 'comum' %}selected{% endif %}>Comum</option>
+                        <option value="admin" {% if u.funcao == 'admin' %}selected{% endif %}>Admin</option>
+                    </select><button type="submit">Salvar</button>
+                </form>
+            </td>
+            <td><span class="status {{ 'inativo' if u.excluido else 'ativo' }}">{{ 'Desativado' if u.excluido else 'Ativo' }}</span></td>
+            <td><div class="acoes-usuario">
+                <a class="acao editar" href="{{ url_for('editar', id_usuario=u.id) }}">Editar</a>
+                {% if u.id != session.get('user_id') %}
+                <form method="POST" action="{{ url_for('admin_status_usuario', user_id=u.id) }}" class="form-inline" onsubmit="return confirm('Confirmar alteração do status desta conta?')">
+                    <input type="hidden" name="excluido" value="{{ 'false' if u.excluido else 'true' }}">
+                    <button class="acao {{ 'visualizar' if u.excluido else 'excluir' }}" type="submit">{{ 'Reativar' if u.excluido else 'Desativar' }}</button>
+                </form>
+                {% endif %}
+            </div></td>
+        </tr>
+        {% else %}<tr><td colspan="6" class="sem-usuarios">Nenhum usuário cadastrado.</td></tr>{% endfor %}
+        </tbody>
+    </table></div>
+</section>
+{% endblock %}

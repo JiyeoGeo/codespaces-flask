@@ -1,0 +1,12 @@
+[
+    {
+        "id": 1,
+        "nome": "Geovana Silva",
+        "email": "geo2@gmail.com",
+        "senha_hash": "pbkdf2:sha256:1000000$3Mmmhi0pXFwKoEw2$788140cbc96a10f45bbaa59cca797901a513f4b5be2f03e5fae3b929a8fd2230",
+        "foto_perfil": "static/uploads/usuario_1.png",
+        "data_cadastro": "2026-11-19 20:16:58",
+        "funcao": "comum",
+        "excluido": false
+    }
+]

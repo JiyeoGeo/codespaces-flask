@@ -1,49 +1,21 @@
 <header>
-
     <nav>
-
-        <div class="logo">
-            Portal Saúde & Bem-Estar
-        </div>
-
+        <div class="logo"><a href="{{ url_for('index') }}">Portal Saúde &amp; Bem-Estar</a></div>
         <div class="menu">
-
-            <a href="{{ url_for('index') }}">
-                Início
-            </a>
-
-            <a href="{{ url_for('about') }}">
-                Sobre
-            </a>
-
-            {% if session.get('usuario_id') %}
-
-                <a href="{{ url_for('profile') }}">
-                    Perfil
-                </a>
-
-                <a href="{{ url_for('listar') }}">
-                    Usuários
-                </a>
-
-                <a href="{{ url_for('logout') }}">
-                    Sair ({{ session.get('usuario_nome') }})
-                </a>
-
+            <a href="{{ url_for('index') }}">Início</a>
+            <a href="{{ url_for('about') }}">Sobre</a>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('profile') }}">Perfil</a>
+                {% if session.get('funcao') == 'admin' %}
+                    <a href="{{ url_for('admin_dashboard') }}">Administração</a>
+                {% endif %}
+                <form class="nav-logout" method="POST" action="{{ url_for('logout') }}">
+                    <button type="submit">Sair</button>
+                </form>
             {% else %}
-
-                <a href="{{ url_for('login') }}">
-                    Login
-                </a>
-
-                <a href="{{ url_for('cadastro') }}">
-                    Cadastrar
-                </a>
-
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('cadastro') }}">Cadastrar</a>
             {% endif %}
-
         </div>
-
     </nav>
-
 </header>

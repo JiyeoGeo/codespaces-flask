@@ -1,528 +1,609 @@
-from datetime import timedelta
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory, session
+import json
+import os
+import secrets
+from datetime import datetime, timedelta
+from functools import wraps
+from pathlib import Path
+
+from dotenv import load_dotenv
+from flask import (
+    Flask, abort, flash, redirect, render_template, request,
+    send_from_directory, session, url_for
+)
+from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
+
+load_dotenv()
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_DIR = BASE_DIR / "data"
+DATABASE_FILE = DATA_DIR / "database.json"
+UPLOAD_DIR = BASE_DIR / "static" / "uploads"
+DEFAULT_AVATAR = "static/images/default_avatar.png"
+ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 
 app = Flask(__name__)
-
-# Chave secreta: necessária para o Flask assinar o cookie da sessão
-app.secret_key = "chave-secreta-do-portal"
-
-# Tempo de vida da sessão quando ela é permanente ("Lembrar de mim")
+app.secret_key = os.getenv("SECRET_KEY") or secrets.token_hex(32)
 app.permanent_session_lifetime = timedelta(minutes=30)
+app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
+app.config["UPLOAD_FOLDER"] = str(UPLOAD_DIR)
 
-# FAVICON
+
+# -------------------------------------------------------------------
+# PERSISTÊNCIA JSON
+# -------------------------------------------------------------------
+
+def inicializar_arquivos():
+    """Garante que os diretórios e arquivos necessários existam."""
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    (BASE_DIR / "static" / "images").mkdir(parents=True, exist_ok=True)
+    if not DATABASE_FILE.exists():
+        salvar_usuarios([])
+    if not (BASE_DIR / DEFAULT_AVATAR).is_file():
+        app.logger.warning("Imagem padrão não encontrada: %s", BASE_DIR / DEFAULT_AVATAR)
+
+
+def carregar_usuarios():
+    inicializar_arquivos()
+    try:
+        with DATABASE_FILE.open("r", encoding="utf-8") as arquivo:
+            dados = json.load(arquivo)
+    except (json.JSONDecodeError, OSError):
+        app.logger.exception("Não foi possível ler data/database.json")
+        raise
+    if not isinstance(dados, list):
+        raise ValueError("A estrutura de database.json deve ser uma lista.")
+    return dados
+
+
+def salvar_usuarios(usuarios):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    temporario = DATABASE_FILE.with_suffix(".tmp")
+    with temporario.open("w", encoding="utf-8") as arquivo:
+        json.dump(usuarios, arquivo, ensure_ascii=False, indent=4)
+    temporario.replace(DATABASE_FILE)
+
+
+def proximo_id(usuarios):
+    return max((int(u.get("id", 0)) for u in usuarios), default=0) + 1
+
+
+def buscar_por_id(user_id, incluir_excluidos=True):
+    for usuario in carregar_usuarios():
+        if int(usuario.get("id", -1)) == int(user_id):
+            if incluir_excluidos or not usuario.get("excluido", False):
+                return usuario
+    return None
+
+
+def buscar_por_email(email, ignorar_id=None):
+    email = (email or "").strip().lower()
+    for usuario in carregar_usuarios():
+        if (usuario.get("email", "").lower() == email
+                and int(usuario.get("id", -1)) != int(ignorar_id or -1)):
+            return usuario
+    return None
+
+
+def usuario_publico(usuario):
+    """Remove campos de autenticação antes de enviar dados ao template."""
+    if not usuario:
+        return None
+    return {k: v for k, v in usuario.items() if k != "senha_hash"}
+
+
+def usuario_atual():
+    user_id = session.get("user_id")
+    if user_id is None:
+        return None
+    usuario = buscar_por_id(user_id, incluir_excluidos=False)
+    if not usuario:
+        session.clear()
+        return None
+    return usuario
+
+
+# Cria um administrador inicial somente quando as credenciais são
+# fornecidas explicitamente no ambiente (.env / configuração do Codespaces).
+def criar_admin_inicial():
+    email = os.getenv("ADMIN_EMAIL", "").strip().lower()
+    senha = os.getenv("ADMIN_PASSWORD", "")
+    if not email or not senha:
+        return
+    usuarios = carregar_usuarios()
+    if any(u.get("funcao") == "admin" for u in usuarios):
+        return
+    if buscar_por_email(email):
+        return
+    usuarios.append({
+        "id": proximo_id(usuarios),
+        "nome": os.getenv("ADMIN_NAME", "Administrador"),
+        "email": email,
+        "senha_hash": generate_password_hash(senha, method="pbkdf2:sha256"),
+        "foto_perfil": DEFAULT_AVATAR,
+        "data_cadastro": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "funcao": "admin",
+        "excluido": False
+    })
+    salvar_usuarios(usuarios)
+
+
+inicializar_arquivos()
+criar_admin_inicial()
+
+
+# -------------------------------------------------------------------
+# AUTORIZAÇÃO
+# -------------------------------------------------------------------
+
+def login_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not usuario_atual():
+            if request.path.startswith("/api/"):
+                abort(401)
+            return render_template("error.html", codigo=401,
+                                   titulo="Não autorizado",
+                                   mensagem="Entre na sua conta para acessar esta página."), 401
+        return view(*args, **kwargs)
+    return wrapped
+
+
+def admin_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        usuario = usuario_atual()
+        if not usuario:
+            return render_template("error.html", codigo=401,
+                                   titulo="Não autorizado",
+                                   mensagem="Entre na sua conta para continuar."), 401
+        if session.get("funcao") != "admin" or usuario.get("funcao") != "admin":
+            return render_template("error.html", codigo=403,
+                                   titulo="Acesso restrito a administradores",
+                                   mensagem="Sua conta não possui permissão para acessar esta área."), 403
+        return view(*args, **kwargs)
+    return wrapped
+
+
+@app.context_processor
+def dados_globais():
+    return {"usuario_logado": usuario_publico(usuario_atual())}
+
+
+# -------------------------------------------------------------------
+# PÁGINAS GERAIS
+# -------------------------------------------------------------------
+
 @app.route("/favicon.ico")
 def favicon():
-    return send_from_directory(
-        "static/icons",
-        "favicon(1).ico"
-    )
+    return send_from_directory(BASE_DIR / "static" / "icons", "favicon(1).ico")
 
-
-# =========================
-# USUÁRIOS (DICIONÁRIO TEMPORÁRIO)
-# =========================
-# Os dados se perdem ao reiniciar o servidor.
-# Os dados do IMC (peso, altura, idade, sexo) também
-# ficam dentro do dicionário do próprio usuário.
-
-usuarios = {}      # {id: {"nome": ..., "email": ..., "senha": ...}}
-proximo_id = 1
-
-
-def email_existe(email, ignorar_id=None):
-    for id_usuario, dados in usuarios.items():
-        if dados["email"] == email and id_usuario != ignorar_id:
-            return True
-    return False
-
-
-def logado():
-    return session.get("usuario_id") in usuarios
-
-
-# =========================
-# INÍCIO
-# =========================
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
 
-# =========================
-# SOBRE
-# =========================
-
 @app.route("/about")
 def about():
     return render_template("about.html")
 
 
-# =========================
-# CREATE - CADASTRAR
-# =========================
+# -------------------------------------------------------------------
+# CADASTRO / LOGIN / LOGOUT
+# -------------------------------------------------------------------
 
 @app.route("/cadastro", methods=["GET", "POST"])
+@app.route("/register", methods=["GET", "POST"])
 def cadastro():
-    global proximo_id
-
     if request.method == "POST":
-        nome = request.form["nome"]
-        email = request.form["email"]
-        senha = request.form["senha"]
+        nome = request.form.get("nome", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        senha = request.form.get("senha", "")
+        confirmar = request.form.get("confirmar_senha", senha)
 
-        if email_existe(email):
-            return render_template("cadastro.html", erro="E-mail já cadastrado.")
+        if not nome or not email or not senha:
+            return render_template("cadastro.html", erro="Preencha todos os campos.",
+                                   nome=nome, email=email)
+        if senha != confirmar:
+            return render_template("cadastro.html", erro="As senhas não coincidem.",
+                                   nome=nome, email=email)
+        if len(senha) < 8:
+            return render_template("cadastro.html", erro="A senha deve ter pelo menos 8 caracteres.",
+                                   nome=nome, email=email)
+        if buscar_por_email(email):
+            return render_template("cadastro.html", erro="E-mail já cadastrado.",
+                                   nome=nome, email=email)
 
-        usuarios[proximo_id] = {"nome": nome, "email": email, "senha": senha}
-        proximo_id += 1
-
+        usuarios = carregar_usuarios()
+        usuarios.append({
+            "id": proximo_id(usuarios),
+            "nome": nome,
+            "email": email,
+            "senha_hash": generate_password_hash(senha, method="pbkdf2:sha256"),
+            "foto_perfil": DEFAULT_AVATAR,
+            "data_cadastro": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "funcao": "comum",
+            "excluido": False
+        })
+        salvar_usuarios(usuarios)
+        flash("Cadastro realizado. Faça login para continuar.", "success")
         return redirect(url_for("login"))
-
     return render_template("cadastro.html")
 
 
-# =========================
-# LOGIN
-# =========================
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
-
     if request.method == "POST":
-        email = request.form["email"]
-        senha = request.form["senha"]
+        email = request.form.get("email", "").strip().lower()
+        senha = request.form.get("senha", "")
+        usuario = buscar_por_email(email)
 
-        for id_usuario, dados in usuarios.items():
-            if dados["email"] == email and dados["senha"] == senha:
+        if (usuario and not usuario.get("excluido", False)
+                and check_password_hash(usuario.get("senha_hash", ""), senha)):
+            session.clear()
+            session["user_id"] = usuario["id"]
+            session["email"] = usuario["email"]
+            session["funcao"] = usuario.get("funcao", "comum")
+            session.permanent = bool(request.form.get("lembrar"))
+            destino = "admin_dashboard" if usuario.get("funcao") == "admin" else "index"
+            return redirect(url_for(destino))
 
-                # Guarda dados na sessão
-                session["usuario_id"] = id_usuario
-                session["usuario_nome"] = dados["nome"]
-
-                # Sessão permanente (expira em 30 min) ou temporária
-                # (termina ao fechar o navegador), conforme a caixa marcada
-                if request.form.get("lembrar"):
-                    session.permanent = True
-                else:
-                    session.permanent = False
-
-                return redirect(url_for("profile"))
-
-        return render_template("login.html", erro="E-mail ou senha incorretos.")
-
+        return render_template("login.html",
+                               erro="E-mail ou senha incorretos, ou conta desativada.",
+                               email=email)
     return render_template("login.html")
 
 
-# =========================
-# LOGOUT
-# =========================
-
-@app.route("/logout")
+@app.route("/logout", methods=["GET", "POST"])
 def logout():
-    # Remove apenas as chaves do login
-    session.pop("usuario_id", None)
-    session.pop("usuario_nome", None)
-    return redirect(url_for("login"))
+    session.clear()
+    return redirect(url_for("index"))
 
 
-# =========================
-# PERFIL
-# =========================
+# -------------------------------------------------------------------
+# PERFIL E EDIÇÃO DA PRÓPRIA CONTA
+# -------------------------------------------------------------------
 
 @app.route("/profile")
+@app.route("/perfil")
+@login_required
 def profile():
+    return render_template("profile.html", usuario=usuario_publico(usuario_atual()))
 
-    if not logado():
-        return redirect(url_for("login"))
 
+def salvar_foto(file_obj, user_id):
+    """Valida a extensão e salva a foto na pasta static/uploads."""
+    if not file_obj or not file_obj.filename:
+        return None
+
+    nome_seguro = secure_filename(file_obj.filename)
+    if not nome_seguro or "." not in nome_seguro:
+        raise ValueError("Nome de arquivo inválido.")
+
+    extensao = nome_seguro.rsplit(".", 1)[-1].lower()
+    if extensao not in ALLOWED_IMAGE_EXTENSIONS:
+        raise ValueError("Formato de imagem não permitido. Use PNG, JPG ou WEBP.")
+
+    UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    nome_arquivo = f"usuario_{int(user_id)}.{extensao}"
+    destino = UPLOAD_DIR / nome_arquivo
+    file_obj.save(destino)
+    return f"static/uploads/{nome_arquivo}"
+
+
+@app.route("/perfil/editar", methods=["GET", "POST"])
+@app.route("/usuarios/<int:id_usuario>/editar", methods=["GET", "POST"])
+@login_required
+def editar(id_usuario=None):
+    atual = usuario_atual()
+    alvo_id = int(id_usuario or atual["id"])
+    if alvo_id != int(atual["id"]) and session.get("funcao") != "admin":
+        abort(403)
+    usuarios = carregar_usuarios()
+    usuario = next((u for u in usuarios if int(u["id"]) == alvo_id), None)
+    if not usuario or usuario.get("excluido", False):
+        abort(404)
+
+    if request.method == "POST":
+        nome = request.form.get("nome", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        nova_senha = request.form.get("senha", "")
+        if not nome or not email:
+            return render_template("editar.html", usuario=usuario_publico(usuario),
+                                   id_usuario=alvo_id, erro="Nome e e-mail são obrigatórios.")
+        if buscar_por_email(email, ignorar_id=alvo_id):
+            return render_template("editar.html", usuario=usuario_publico(usuario),
+                                   id_usuario=alvo_id, erro="E-mail já cadastrado.")
+        usuario["nome"] = nome
+        usuario["email"] = email
+        # data_cadastro não é alterada na edição.
+        if nova_senha:
+            if len(nova_senha) < 8:
+                return render_template("editar.html", usuario=usuario_publico(usuario),
+                                       id_usuario=alvo_id,
+                                       erro="A nova senha deve ter pelo menos 8 caracteres.")
+            usuario["senha_hash"] = generate_password_hash(
+                nova_senha, method="pbkdf2:sha256"
+            )
+        foto = request.files.get("foto_perfil")
+        if foto and foto.filename:
+            try:
+                caminho = salvar_foto(foto, alvo_id)
+                if caminho:
+                    usuario["foto_perfil"] = caminho
+            except ValueError as erro:
+                return render_template("editar.html", usuario=usuario_publico(usuario),
+                                       id_usuario=alvo_id, erro=str(erro))
+        salvar_usuarios(usuarios)
+        if alvo_id == int(session["user_id"]):
+            session["email"] = email
+        flash("Dados atualizados com sucesso.", "success")
+        return redirect(url_for("profile") if alvo_id == int(session["user_id"])
+                        else url_for("admin_dashboard"))
+    return render_template("editar.html", usuario=usuario_publico(usuario),
+                           id_usuario=alvo_id)
+
+
+@app.route("/perfil/excluir", methods=["POST"])
+@login_required
+def excluir_propria_conta():
+    atual_id = int(session["user_id"])
+    usuarios = carregar_usuarios()
+    for usuario in usuarios:
+        if int(usuario["id"]) == atual_id:
+            usuario["excluido"] = True
+            break
+    salvar_usuarios(usuarios)
+    session.clear()
+    flash("Sua conta foi desativada.", "success")
+    return redirect(url_for("index"))
+
+
+# Compatibilidade com a rota de exclusão existente, agora com exclusão lógica.
+@app.route("/usuarios/<int:id_usuario>/excluir", methods=["POST"])
+@login_required
+def excluir(id_usuario):
+    if int(id_usuario) == int(session["user_id"]):
+        return excluir_propria_conta()
+    if session.get("funcao") != "admin":
+        abort(403)
+    return alterar_status_usuario(id_usuario, True)
+
+
+# -------------------------------------------------------------------
+# ADMINISTRAÇÃO
+# -------------------------------------------------------------------
+
+def alterar_status_usuario(user_id, excluido):
+    usuarios = carregar_usuarios()
+    encontrado = False
+    for usuario in usuarios:
+        if int(usuario["id"]) == int(user_id):
+            usuario["excluido"] = bool(excluido)
+            encontrado = True
+            break
+    if not encontrado:
+        abort(404)
+    salvar_usuarios(usuarios)
+    flash("Conta atualizada.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
+@app.route("/admin")
+@app.route("/admin/dashboard")
+@admin_required
+def admin_dashboard():
+    usuarios = carregar_usuarios()
+    ativos = [u for u in usuarios if not u.get("excluido", False)]
     return render_template(
-        "profile.html",
-        usuario=usuarios[session["usuario_id"]]
+        "admin_dashboard.html",
+        usuarios=[usuario_publico(u) for u in usuarios],
+        total=len(usuarios),
+        ativos=len(ativos),
+        excluidos=len(usuarios) - len(ativos),
+        administradores=sum(1 for u in ativos if u.get("funcao") == "admin")
     )
 
 
-# =========================
-# READ - LISTAR USUÁRIOS
-# =========================
+@app.route("/admin/usuarios/novo", methods=["GET", "POST"])
+@admin_required
+def admin_novo_usuario():
+    if request.method == "POST":
+        nome = request.form.get("nome", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        senha = request.form.get("senha", "")
+        funcao = request.form.get("funcao", "comum")
+        if funcao not in {"comum", "admin"}:
+            funcao = "comum"
+        if not nome or not email or len(senha) < 8:
+            return render_template("admin_usuario.html",
+                                   erro="Informe nome, e-mail e senha com pelo menos 8 caracteres.")
+        if buscar_por_email(email):
+            return render_template("admin_usuario.html", erro="E-mail já cadastrado.")
+        usuarios = carregar_usuarios()
+        usuarios.append({
+            "id": proximo_id(usuarios), "nome": nome, "email": email,
+            "senha_hash": generate_password_hash(senha, method="pbkdf2:sha256"),
+            "foto_perfil": DEFAULT_AVATAR,
+            "data_cadastro": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "funcao": funcao, "excluido": False
+        })
+        salvar_usuarios(usuarios)
+        flash("Usuário criado.", "success")
+        return redirect(url_for("admin_dashboard"))
+    return render_template("admin_usuario.html")
 
+
+@app.route("/admin/usuarios/<int:user_id>/status", methods=["POST"])
+@admin_required
+def admin_status_usuario(user_id):
+    usuario = buscar_por_id(user_id)
+    if not usuario:
+        abort(404)
+    novo_status = request.form.get("excluido") == "true"
+    if int(user_id) == int(session["user_id"]) and novo_status:
+        flash("Você não pode desativar sua própria conta por esta tela.", "error")
+        return redirect(url_for("admin_dashboard"))
+    return alterar_status_usuario(user_id, novo_status)
+
+
+@app.route("/admin/usuarios/<int:user_id>/funcao", methods=["POST"])
+@admin_required
+def admin_alterar_funcao(user_id):
+    funcao = request.form.get("funcao")
+    if funcao not in {"admin", "comum"}:
+        abort(400)
+    if int(user_id) == int(session["user_id"]) and funcao != "admin":
+        flash("Não é permitido remover sua própria função administrativa.", "error")
+        return redirect(url_for("admin_dashboard"))
+    usuarios = carregar_usuarios()
+    for usuario in usuarios:
+        if int(usuario["id"]) == int(user_id):
+            usuario["funcao"] = funcao
+            salvar_usuarios(usuarios)
+            flash("Função atualizada.", "success")
+            return redirect(url_for("admin_dashboard"))
+    abort(404)
+
+
+# Rotas antigas de listagem/consulta permanecem, mas agora são exclusivas do admin.
 @app.route("/usuarios")
+@admin_required
 def listar():
-    if not logado():
-        return redirect(url_for("login"))
+    return redirect(url_for("admin_dashboard"))
 
-    return render_template("usuarios.html", usuarios=usuarios)
-
-
-# =========================
-# READ - CONSULTAR UM USUÁRIO
-# =========================
 
 @app.route("/usuarios/<int:id_usuario>")
+@admin_required
 def consultar(id_usuario):
-    if not logado():
-        return redirect(url_for("login"))
-
-    if id_usuario not in usuarios:
-        return redirect(url_for("listar"))
-
+    usuario = buscar_por_id(id_usuario)
+    if not usuario:
+        abort(404)
     return render_template("usuario.html", id_usuario=id_usuario,
-                           usuario=usuarios[id_usuario])
+                           usuario=usuario_publico(usuario))
 
 
-# =========================
-# UPDATE - EDITAR USUÁRIO
-# =========================
-
-@app.route("/usuarios/<int:id_usuario>/editar", methods=["GET", "POST"])
-def editar(id_usuario):
-    if not logado():
-        return redirect(url_for("login"))
-
-    if id_usuario not in usuarios:
-        return redirect(url_for("listar"))
-
-    if request.method == "POST":
-        nome = request.form["nome"]
-        email = request.form["email"]
-        senha = request.form["senha"]
-
-        if email_existe(email, ignorar_id=id_usuario):
-            return render_template("editar.html", id_usuario=id_usuario,
-                                   usuario=usuarios[id_usuario],
-                                   erro="E-mail já cadastrado.")
-
-        # Atualiza só estes campos (os dados do IMC são mantidos)
-        usuarios[id_usuario]["nome"] = nome
-        usuarios[id_usuario]["email"] = email
-        usuarios[id_usuario]["senha"] = senha
-
-        # Se editou o próprio usuário, atualiza o nome guardado na sessão
-        if id_usuario == session.get("usuario_id"):
-            session["usuario_nome"] = nome
-
-        return redirect(url_for("listar"))
-
-    return render_template("editar.html", id_usuario=id_usuario,
-                           usuario=usuarios[id_usuario])
-
-
-# =========================
-# DELETE - EXCLUIR USUÁRIO
-# =========================
-
-@app.route("/usuarios/<int:id_usuario>/excluir", methods=["POST"])
-def excluir(id_usuario):
-    if not logado():
-        return redirect(url_for("login"))
-
-    usuarios.pop(id_usuario, None)
-
-    # Se excluiu a própria conta, encerra toda a sessão
-    if id_usuario == session.get("usuario_id"):
-        session.clear()
-        return redirect(url_for("login"))
-
-    return redirect(url_for("listar"))
-
-
-# =========================
-# CALCULADORA MATEMÁTICA
-# =========================
+# -------------------------------------------------------------------
+# CALCULADORA MATEMÁTICA (preservada)
+# -------------------------------------------------------------------
 
 @app.route("/calcular", methods=["POST"])
 def calcular():
-
-    op = request.form["op"]
-    a = request.form["a"]
-    b = request.form["b"]
-
-    return redirect(
-        url_for(
-            "math",
-            op=op,
-            a=a,
-            b=b
-        )
-    )
+    try:
+        op = request.form["op"]
+        a = float(request.form["a"])
+        b = float(request.form["b"])
+    except (KeyError, ValueError):
+        abort(400)
+    return redirect(url_for("math", op=op, a=a, b=b))
 
 
 @app.route("/math/<op>/<float(signed=True):a>/<float(signed=True):b>")
 def math(op, a, b):
-
-    if op == "soma":
-
-        resultado = a + b
-        nome = "Soma"
-        simbolo = "+"
-
-    elif op == "subtracao":
-
-        resultado = a - b
-        nome = "Subtração"
-        simbolo = "-"
-
-    elif op == "multiplicacao":
-
-        resultado = a * b
-        nome = "Multiplicação"
-        simbolo = "×"
-
-    elif op == "divisao":
-
-        nome = "Divisão"
-        simbolo = "÷"
-
-        if b == 0:
-            resultado = "Não é possível dividir por zero."
-        else:
-            resultado = a / b
-
+    operacoes = {
+        "soma": (a + b, "Soma", "+"),
+        "subtracao": (a - b, "Subtração", "-"),
+        "multiplicacao": (a * b, "Multiplicação", "×")
+    }
+    if op == "divisao":
+        resultado = "Não é possível dividir por zero." if b == 0 else a / b
+        nome, simbolo = "Divisão", "÷"
+    elif op in operacoes:
+        resultado, nome, simbolo = operacoes[op]
     else:
-
-        return "Operação inválida."
-
-    return render_template(
-        "math.html",
-        nome=nome,
-        simbolo=simbolo,
-        a=a,
-        b=b,
-        resultado=resultado
-    )
+        abort(400)
+    return render_template("math.html", nome=nome, simbolo=simbolo,
+                           a=a, b=b, resultado=resultado)
 
 
-# =========================
-# RECEBE OS DADOS DO IMC
-# =========================
+# -------------------------------------------------------------------
+# CALCULADORA DE IMC (preservada e com persistência no perfil)
+# -------------------------------------------------------------------
 
 @app.route("/calcular-imc", methods=["POST"])
+@login_required
 def calcular_imc():
+    try:
+        peso = float(request.form["peso"])
+        altura = float(request.form["altura"]) / 100
+        idade = int(request.form["idade"])
+        sexo = request.form["sexo"]
+    except (KeyError, ValueError):
+        abort(400)
+    if peso <= 0 or not 0.5 <= altura <= 2.5 or idade <= 0 or sexo not in {"masculino", "feminino"}:
+        abort(400)
 
-    if not logado():
-        return redirect(url_for("login"))
+    usuarios = carregar_usuarios()
+    for usuario in usuarios:
+        if int(usuario["id"]) == int(session["user_id"]):
+            usuario.update({"peso": peso, "altura": altura, "idade": idade, "sexo": sexo})
+            break
+    salvar_usuarios(usuarios)
+    return redirect(url_for("imc", peso=peso, altura=altura, idade=idade, sexo=sexo))
 
-    peso = float(request.form["peso"])
-
-    # O formulário recebe centímetros.
-    # O cálculo utiliza metros.
-    altura = float(request.form["altura"]) / 100
-
-    idade = int(request.form["idade"])
-    sexo = request.form["sexo"]
-
-    # Atualiza os dados do usuário logado
-    usuario = usuarios[session["usuario_id"]]
-    usuario["peso"] = peso
-    usuario["altura"] = altura
-    usuario["idade"] = idade
-    usuario["sexo"] = sexo
-
-    return redirect(
-        url_for(
-            "imc",
-            peso=peso,
-            altura=altura,
-            idade=idade,
-            sexo=sexo
-        )
-    )
-
-
-# =========================
-# RESULTADO DO IMC
-# =========================
 
 @app.route("/imc/<float:peso>/<float:altura>/<int:idade>/<sexo>")
+@login_required
 def imc(peso, altura, idade, sexo):
-
-    if not logado():
-        return redirect(url_for("login"))
-
-    # =========================
-    # CÁLCULO DO IMC
-    # =========================
-
+    if altura <= 0 or sexo not in {"masculino", "feminino"}:
+        abort(400)
     valor_imc = peso / (altura ** 2)
-
-    # =========================
-    # CLASSIFICAÇÃO
-    # =========================
-
     if valor_imc < 18.5:
-
-        classificacao = "Magreza"
-        cor = "azul"
-
+        classificacao, cor = "Magreza", "azul"
     elif valor_imc < 25:
-
-        classificacao = "Normal"
-        cor = "verde"
-
+        classificacao, cor = "Normal", "verde"
     elif valor_imc < 30:
-
-        classificacao = "Sobrepeso"
-        cor = "amarelo"
-
+        classificacao, cor = "Sobrepeso", "amarelo"
     else:
+        classificacao, cor = "Obesidade", "vermelho"
 
-        classificacao = "Obesidade"
-        cor = "vermelho"
-
-    # =========================
-    # POSIÇÃO DO PONTEIRO
-    # =========================
-    #
-    # A régua visual representa
-    # IMC de 10 até 40.
-    #
-    # Valores abaixo de 10 ficam
-    # no início.
-    #
-    # Valores acima de 40 ficam
-    # no final.
-    # =========================
-
-    IMC_MINIMO_REGUA = 10
-    IMC_MAXIMO_REGUA = 40
-
-    if valor_imc <= IMC_MINIMO_REGUA:
-        posicao_ponteiro = 0
-
-    elif valor_imc >= IMC_MAXIMO_REGUA:
-        posicao_ponteiro = 100
-
-    else:
-        posicao_ponteiro = (
-            (valor_imc - IMC_MINIMO_REGUA)
-            / (IMC_MAXIMO_REGUA - IMC_MINIMO_REGUA)
-            ) * 100
-
-    # =========================
-    # PESO DE REFERÊNCIA
-    # =========================
-
+    minimo, maximo = 10, 40
+    posicao = max(0, min(100, ((valor_imc - minimo) / (maximo - minimo)) * 100))
     peso_minimo = 18.5 * (altura ** 2)
     peso_maximo = 24.9 * (altura ** 2)
-
-    # =========================
-    # FÓRMULA DE DEURENBERG
-    # =========================
+    gordura = (1.20 * valor_imc + 0.23 * idade -
+               (16.2 if sexo == "masculino" else 5.4))
 
     if sexo == "masculino":
-
-        gordura = (
-            1.20 * valor_imc
-            + 0.23 * idade
-            - 16.2
-        )
-
+        limites = [(2, "Essencial"), (6, "Atlético"), (14, "Fitness"),
+                   (25, "Aceitável")]
     else:
-
-        gordura = (
-            1.20 * valor_imc
-            + 0.23 * idade
-            - 5.4
-        )
-
-    # =========================
-    # CLASSIFICAÇÃO DA GORDURA
-    # =========================
-
-    if sexo == "masculino":
-
-        if gordura < 2:
-
-            gordura_classificacao = "Essencial"
-
-        elif gordura < 6:
-
-            gordura_classificacao = "Atlético"
-
-        elif gordura < 14:
-
-            gordura_classificacao = "Fitness"
-
-        elif gordura < 25:
-
-            gordura_classificacao = "Aceitável"
-
-        else:
-
-            gordura_classificacao = "Obesidade"
-
-    else:
-
-        if gordura < 10:
-
-            gordura_classificacao = "Essencial"
-
-        elif gordura < 14:
-
-            gordura_classificacao = "Atlético"
-
-        elif gordura < 21:
-
-            gordura_classificacao = "Fitness"
-
-        elif gordura < 32:
-
-            gordura_classificacao = "Aceitável"
-
-        else:
-
-            gordura_classificacao = "Obesidade"
-
-    # =========================
-    # RECOMENDAÇÕES
-    # =========================
-
+        limites = [(10, "Essencial"), (14, "Atlético"), (21, "Fitness"),
+                   (32, "Aceitável")]
+    gordura_classificacao = next((nome for limite, nome in limites if gordura < limite),
+                                 "Obesidade")
     recomendacoes = {
-
-        "Essencial":
-            "Essa faixa representa uma quantidade mínima de gordura corporal necessária para funções do organismo.",
-
-        "Atlético":
-            "A estimativa está na faixa classificada como atlética pela referência utilizada.",
-
-        "Fitness":
-            "A estimativa está na faixa classificada como fitness pela referência utilizada.",
-
-        "Aceitável":
-            "A estimativa está dentro da faixa considerada aceitável pela referência utilizada.",
-
-        "Obesidade":
-            "A estimativa está acima da faixa considerada aceitável pela referência utilizada. Para uma avaliação real, deve-se procurar orientação de um profissional de saúde."
+        "Essencial": "Essa faixa representa uma quantidade mínima de gordura corporal necessária para funções do organismo.",
+        "Atlético": "A estimativa está na faixa classificada como atlética pela referência utilizada.",
+        "Fitness": "A estimativa está na faixa classificada como fitness pela referência utilizada.",
+        "Aceitável": "A estimativa está dentro da faixa considerada aceitável pela referência utilizada.",
+        "Obesidade": "A estimativa está acima da faixa considerada aceitável pela referência utilizada. Para uma avaliação real, procure orientação profissional."
     }
-
-    recomendacao = recomendacoes[gordura_classificacao]
-
     return render_template(
-        "imc.html",
-
-        peso=peso,
-        altura=altura,
-        idade=idade,
-        sexo=sexo,
-
-        imc=valor_imc,
-        classificacao=classificacao,
-        cor=cor,
-
-        peso_minimo=peso_minimo,
-        peso_maximo=peso_maximo,
-
-        gordura=gordura,
-        gordura_classificacao=gordura_classificacao,
-        recomendacao=recomendacao,
-
-        posicao_ponteiro=posicao_ponteiro
+        "imc.html", peso=peso, altura=altura, idade=idade, sexo=sexo,
+        imc=valor_imc, classificacao=classificacao, cor=cor,
+        peso_minimo=peso_minimo, peso_maximo=peso_maximo,
+        gordura=gordura, gordura_classificacao=gordura_classificacao,
+        recomendacao=recomendacoes[gordura_classificacao],
+        posicao_ponteiro=posicao
     )
 
 
-# =========================
-# EXECUÇÃO
-# =========================
+@app.errorhandler(404)
+def pagina_nao_encontrada(_erro):
+    return render_template("error.html", codigo=404,
+                           titulo="Página não encontrada",
+                           mensagem="A página solicitada não existe."), 404
+
+
+@app.errorhandler(413)
+def arquivo_muito_grande(_erro):
+    return render_template("error.html", codigo=413,
+                           titulo="Arquivo muito grande",
+                           mensagem="A imagem deve ter no máximo 5 MB."), 413
+
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=os.getenv("FLASK_DEBUG") == "1")
