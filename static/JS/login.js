@@ -52,4 +52,3 @@ if (campoSenha && aviso) {
         campoEmFoco = false;
         atualizarAviso();
     });
-}
