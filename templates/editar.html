@@ -5,6 +5,7 @@
     <h1>Atualizar dados do usuário</h1>
     {% if erro %}<p class="erro" role="alert">{{ erro }}</p>{% endif %}
     <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label for="nome">Nome</label>
         <input type="text" id="nome" name="nome" value="{{ usuario.nome }}" required>
         <label for="email">Usuário/E-mail</label>
@@ -20,6 +21,7 @@
     </form>
     {% if id_usuario == session.get('user_id') %}
     <form method="POST" action="{{ url_for('excluir_propria_conta') }}" onsubmit="return confirm('Deseja realmente desativar sua conta?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="botao-perigo">Desativar minha conta</button>
     </form>
     {% endif %}

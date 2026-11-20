@@ -10,6 +10,7 @@ from flask import (
     Flask, abort, flash, redirect, render_template, request,
     send_from_directory, session, url_for
 )
+from flask_wtf.csrf import CSRFProtect
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
@@ -26,6 +27,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 if not app.secret_key:
     raise RuntimeError("Configure SECRET_KEY no arquivo .env")
+CSRFProtect(app)
 app.permanent_session_lifetime = timedelta(minutes=30)
 app.permanent_session_lifetime = timedelta(minutes=30)
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
@@ -250,8 +252,7 @@ def login():
             session["email"] = usuario["email"]
             session["funcao"] = usuario.get("funcao", "comum")
             session.permanent = bool(request.form.get("lembrar"))
-            destino = "admin_dashboard" if usuario.get("funcao") == "admin" else "index"
-            return redirect(url_for(destino))
+            return redirect(url_for("index"))
 
         return render_template("login.html",
                                erro="E-mail ou senha incorretos, ou conta desativada.",
@@ -259,7 +260,7 @@ def login():
     return render_template("login.html")
 
 
-@app.route("/logout", methods=["GET", "POST"])
+@app.route("/logout", methods=["POST"])
 def logout():
     session.clear()
     return redirect(url_for("index"))

@@ -183,6 +183,7 @@
         action="{{ url_for('calcular_imc') }}"
         method="POST"
     >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <label for="novo-peso">
             Peso (kg):

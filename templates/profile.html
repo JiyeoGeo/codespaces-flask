@@ -23,6 +23,7 @@
     <h2>Calculadora de IMC</h2>
     <p>Informe seus dados para realizar o cálculo.</p>
     <form action="{{ url_for('calcular_imc') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label for="peso">Peso (kg):</label><input type="number" id="peso" name="peso" step="0.1" min="1" required>
         <label for="altura">Altura (cm):</label><input type="number" id="altura" name="altura" step="1" min="50" max="250" required>
         <label for="idade">Idade:</label><input type="number" id="idade" name="idade" min="1" required>

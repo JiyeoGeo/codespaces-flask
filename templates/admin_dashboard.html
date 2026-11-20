@@ -24,6 +24,7 @@
             <td>#{{ u.id }}</td><td>{{ u.nome }}</td><td>{{ u.email }}</td>
             <td>
                 <form method="POST" action="{{ url_for('admin_alterar_funcao', user_id=u.id) }}" class="form-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <select name="funcao" aria-label="Função do usuário">
                         <option value="comum" {% if u.funcao == 'comum' %}selected{% endif %}>Comum</option>
                         <option value="admin" {% if u.funcao == 'admin' %}selected{% endif %}>Admin</option>
@@ -35,6 +36,7 @@
                 <a class="acao editar" href="{{ url_for('editar', id_usuario=u.id) }}">Editar</a>
                 {% if u.id != session.get('user_id') %}
                 <form method="POST" action="{{ url_for('admin_status_usuario', user_id=u.id) }}" class="form-inline" onsubmit="return confirm('Confirmar alteração do status desta conta?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="excluido" value="{{ 'false' if u.excluido else 'true' }}">
                     <button class="acao {{ 'visualizar' if u.excluido else 'excluir' }}" type="submit">{{ 'Reativar' if u.excluido else 'Desativar' }}</button>
                 </form>

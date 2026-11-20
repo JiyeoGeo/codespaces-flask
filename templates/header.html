@@ -10,6 +10,7 @@
                     <a href="{{ url_for('admin_dashboard') }}">Administração</a>
                 {% endif %}
                 <form class="nav-logout" method="POST" action="{{ url_for('logout') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit">Sair</button>
                 </form>
             {% else %}

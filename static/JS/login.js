@@ -40,8 +40,8 @@ if (campoSenha && aviso) {
         }
     }
 
-    document.addEventListener("keydown", verificarCapsLock);
-    document.addEventListener("keyup", verificarCapsLock);
+    document.addEventListener("keydown", verificarCapsLock, true);
+    document.addEventListener("keyup", verificarCapsLock, true);
 
     campoSenha.addEventListener("focus", () => {
         campoEmFoco = true;
