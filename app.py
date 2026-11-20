@@ -23,7 +23,10 @@ DEFAULT_AVATAR = "static/images/default_avatar.png"
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY") or secrets.token_hex(32)
+app.secret_key = os.getenv("SECRET_KEY")
+if not app.secret_key:
+    raise RuntimeError("Configure SECRET_KEY no arquivo .env")
+app.permanent_session_lifetime = timedelta(minutes=30)
 app.permanent_session_lifetime = timedelta(minutes=30)
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 app.config["UPLOAD_FOLDER"] = str(UPLOAD_DIR)
