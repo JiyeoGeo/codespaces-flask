@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Usuário{% endblock %}
+{% block content %}
+<section class="perfil-card">
+    <h1>Dados do usuário</h1>
+    <p><strong>ID:</strong> #{{ id_usuario }}</p>
+    <p><strong>Nome:</strong> {{ usuario.nome }}</p>
+    <p><strong>E-mail:</strong> {{ usuario.email }}</p>
+    <p><strong>Função:</strong> {{ usuario.funcao|capitalize }}</p>
+    <p><strong>Status:</strong> {{ "Desativado" if usuario.excluido else "Ativo" }}</p>
+    <p><strong>Cadastro:</strong> {{ usuario.data_cadastro }}</p>
+    <a class="botao-link" href="{{ url_for('admin_dashboard') }}">Voltar ao painel</a>
+</section>
+{% endblock %}

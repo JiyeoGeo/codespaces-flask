@@ -372,7 +372,7 @@ def excluir(id_usuario):
         return excluir_propria_conta()
     atual = usuario_atual()
     if not atual or atual.get("funcao") != "admin":
-    abort(403)
+        abort(403)
     return alterar_status_usuario(id_usuario, True)
 
 
