@@ -302,7 +302,7 @@ def salvar_foto(file_obj, user_id):
 def editar(id_usuario=None):
     atual = usuario_atual()
     alvo_id = int(id_usuario or atual["id"])
-    if alvo_id != int(atual["id"]) and session.get("funcao") != "admin":
+    if alvo_id != int(atual["id"]) and atual.get("funcao") != "admin":
         abort(403)
     usuarios = carregar_usuarios()
     usuario = next((u for u in usuarios if int(u["id"]) == alvo_id), None)
@@ -370,8 +370,9 @@ def excluir_propria_conta():
 def excluir(id_usuario):
     if int(id_usuario) == int(session["user_id"]):
         return excluir_propria_conta()
-    if session.get("funcao") != "admin":
-        abort(403)
+    atual = usuario_atual()
+    if not atual or atual.get("funcao") != "admin":
+    abort(403)
     return alterar_status_usuario(id_usuario, True)
 
 

@@ -21,13 +21,11 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         });
     });
-
     // Detecção do Caps Lock
-    const campoSenha = document.getElementById("senha");
-    const aviso = document.getElementById("caps-lock");
+const campoSenha = document.getElementById("senha");
+const aviso = document.getElementById("caps-lock");
 
-    if (!campoSenha || !aviso) return;
-
+if (campoSenha && aviso) {
     let campoEmFoco = false;
     let capsLockAtivo = false;
 
@@ -36,15 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function verificarCapsLock(evento) {
-        if (evento.key === "CapsLock") {
-            capsLockAtivo = evento.type === "keydown"
-                ? !capsLockAtivo
-                : capsLockAtivo;
-
-            atualizarAviso();
-            return;
-        }
-
         if (typeof evento.getModifierState === "function") {
             capsLockAtivo = evento.getModifierState("CapsLock");
             atualizarAviso();
@@ -52,6 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     document.addEventListener("keydown", verificarCapsLock);
+    document.addEventListener("keyup", verificarCapsLock);
 
     campoSenha.addEventListener("focus", () => {
         campoEmFoco = true;
@@ -62,5 +52,4 @@ document.addEventListener("DOMContentLoaded", () => {
         campoEmFoco = false;
         atualizarAviso();
     });
-
-});
+}
