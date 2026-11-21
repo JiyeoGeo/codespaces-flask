@@ -1,3 +1,4 @@
+
 import json
 import os
 import secrets
@@ -23,15 +24,35 @@ UPLOAD_DIR = BASE_DIR / "static" / "uploads"
 DEFAULT_AVATAR = "static/images/default_avatar.png"
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 
+# --------------------------------------------------
+# CONFIGURAÇÃO DO FLASK
+# --------------------------------------------------
+
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY")
-if not app.secret_key:
+
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+
+if not app.config["SECRET_KEY"]:
     raise RuntimeError("Configure SECRET_KEY no arquivo .env")
-CSRFProtect(app)
-app.permanent_session_lifetime = timedelta(minutes=30)
-app.permanent_session_lifetime = timedelta(minutes=30)
+
+# Configurações de sessão
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+# O Codespaces utiliza HTTPS no navegador.
+app.config["SESSION_COOKIE_SECURE"] = False
+
+# Configurações CSRF
+app.config["WTF_CSRF_TIME_LIMIT"] = timedelta(hours=1)
+
+# Uploads
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 app.config["UPLOAD_FOLDER"] = str(UPLOAD_DIR)
+
+# Ativa proteção CSRF
+csrf = CSRFProtect(app)
+
 
 
 # -------------------------------------------------------------------

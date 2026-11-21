@@ -21,11 +21,13 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         });
     });
-    // Detecção do Caps Lock
-const campoSenha = document.getElementById("senha");
-const aviso = document.getElementById("caps-lock");
 
-if (campoSenha && aviso) {
+    // Detecção do Caps Lock
+    const campoSenha = document.getElementById("senha");
+    const aviso = document.getElementById("caps-lock");
+
+    if (!campoSenha || !aviso) return;
+
     let campoEmFoco = false;
     let capsLockAtivo = false;
 
@@ -34,14 +36,22 @@ if (campoSenha && aviso) {
     }
 
     function verificarCapsLock(evento) {
+        if (evento.key === "CapsLock") {
+            capsLockAtivo = evento.type === "keydown"
+                ? !capsLockAtivo
+                : capsLockAtivo;
+
+            atualizarAviso();
+            return;
+        }
+
         if (typeof evento.getModifierState === "function") {
             capsLockAtivo = evento.getModifierState("CapsLock");
             atualizarAviso();
         }
     }
 
-    document.addEventListener("keydown", verificarCapsLock, true);
-    document.addEventListener("keyup", verificarCapsLock, true);
+    document.addEventListener("keydown", verificarCapsLock);
 
     campoSenha.addEventListener("focus", () => {
         campoEmFoco = true;
@@ -52,5 +62,5 @@ if (campoSenha && aviso) {
         campoEmFoco = false;
         atualizarAviso();
     });
-}
+
 });
