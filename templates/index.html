@@ -25,18 +25,15 @@
     >
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <label for="numero-a">Primeiro número</label>
         <input
             type="number"
-            id="numero-a"
             name="a"
             step="any"
             placeholder="Primeiro número"
             required
         >
 
-        <label for="operacao">Operação</label>
-        <select id="operacao" name="op" required>
+        <select name="op">
 
             <option value="soma">
                 Soma
@@ -56,10 +53,8 @@
 
         </select>
 
-        <label for="numero-b">Segundo número</label>
         <input
             type="number"
-            id="numero-b"
             name="b"
             step="any"
             placeholder="Segundo número"
