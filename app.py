@@ -54,6 +54,13 @@ app.config["UPLOAD_FOLDER"] = str(UPLOAD_DIR)
 csrf = CSRFProtect(app)
 
 
+@app.after_request
+def prevent_authenticated_page_caching(response):
+    if session.get("user_id") is not None or request.endpoint == "logout":
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 
 # -------------------------------------------------------------------
 # PERSISTÊNCIA JSON

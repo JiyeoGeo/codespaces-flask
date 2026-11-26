@@ -7,6 +7,10 @@
         "foto_perfil": "static/images/default_avatar.png",
         "data_cadastro": "2026-11-26 14:17:04",
         "funcao": "admin",
-        "excluido": false
+        "excluido": false,
+        "peso": 49.0,
+        "altura": 1.63,
+        "idade": 17,
+        "sexo": "feminino"
     }
 ]
