@@ -1,1 +1,12 @@
+[
+    {
+        "id": 1,
+        "nome": "Emipilica",
+        "email": "emily@gmail.com",
+        "senha_hash": "pbkdf2:sha256:1000000$TosbXxhyr4IxeZiN$16e23c60f575f3af7964bcabe39eb9ab8ddfc830aad2a0ec53cd2622e4d44b41",
+        "foto_perfil": "static/images/default_avatar.png",
+        "data_cadastro": "2026-11-26 14:17:04",
+        "funcao": "admin",
+        "excluido": false
+    }
 ]
