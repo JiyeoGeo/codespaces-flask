@@ -10,7 +10,6 @@ env/
 .env
 .env.*
 !.env.example
-/data/database.json
 
 # Arquivos enviados pelos usuários (mantém a pasta no Git)
 static/uploads/*
