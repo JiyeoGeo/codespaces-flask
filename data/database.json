@@ -12,5 +12,15 @@
         "altura": 1.63,
         "idade": 17,
         "sexo": "feminino"
+    },
+    {
+        "id": 2,
+        "nome": "Geovana",
+        "email": "geovana@gmail.com",
+        "senha_hash": "pbkdf2:sha256:1000000$mWf1MhUJfvZoFmAF$a2b7d0a5aee24e48dda180da70bbb7890786a7c3620445fd1f39274d66c62058",
+        "foto_perfil": "static/uploads/usuario_2.png",
+        "data_cadastro": "2026-11-26 14:49:04",
+        "funcao": "admin",
+        "excluido": false
     }
 ]
