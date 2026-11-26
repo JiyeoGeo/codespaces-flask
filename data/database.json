@@ -21,6 +21,10 @@
         "foto_perfil": "static/uploads/usuario_2.png",
         "data_cadastro": "2026-11-26 14:49:04",
         "funcao": "admin",
-        "excluido": false
+        "excluido": false,
+        "peso": 50.0,
+        "altura": 1.55,
+        "idade": 16,
+        "sexo": "feminino"
     }
 ]
