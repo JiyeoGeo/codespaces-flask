@@ -44,7 +44,7 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = False
 
 # Configurações CSRF
-app.config["WTF_CSRF_TIME_LIMIT"] = timedelta(hours=1)
+app.config["WTF_CSRF_TIME_LIMIT"] = 3600
 
 # Uploads
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
