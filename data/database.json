@@ -26,5 +26,19 @@
         "altura": 1.55,
         "idade": 16,
         "sexo": "feminino"
+    },
+    {
+        "id": 3,
+        "nome": "Flor",
+        "email": "flor@gmail.com",
+        "senha_hash": "pbkdf2:sha256:1000000$W9iClqly7ZCxFZCS$24e3634e7de59af8b52ba53d93961fa27104098d3394cb1322acb69e654fbac1",
+        "foto_perfil": "static/images/default_avatar.png",
+        "data_cadastro": "2026-11-27 10:53:58",
+        "funcao": "comum",
+        "excluido": false,
+        "peso": 56.0,
+        "altura": 1.65,
+        "idade": 18,
+        "sexo": "feminino"
     }
 ]
