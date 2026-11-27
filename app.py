@@ -36,7 +36,7 @@ if not app.config["SECRET_KEY"]:
     raise RuntimeError("Configure SECRET_KEY no arquivo .env")
 
 # Configurações de sessão
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=30)
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(minutes=1)
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
@@ -264,28 +264,6 @@ def cadastro():
         flash("Cadastro realizado. Faça login para continuar.", "success")
         return redirect(url_for("login"))
     return render_template("cadastro.html")
-
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
-        senha = request.form.get("senha", "")
-        usuario = buscar_por_email(email)
-
-        if (usuario and not usuario.get("excluido", False)
-                and check_password_hash(usuario.get("senha_hash", ""), senha)):
-            session.clear()
-            session["user_id"] = usuario["id"]
-            session["email"] = usuario["email"]
-            session["funcao"] = usuario.get("funcao", "comum")
-            session.permanent = bool(request.form.get("lembrar"))
-            return redirect(url_for("index"))
-
-        return render_template("login.html",
-                               erro="E-mail ou senha incorretos, ou conta desativada.",
-                               email=email)
-    return render_template("login.html")
 
 
 @app.route("/logout", methods=["POST"])

@@ -40,5 +40,15 @@
         "altura": 1.65,
         "idade": 18,
         "sexo": "feminino"
+    },
+    {
+        "id": 4,
+        "nome": "Maria",
+        "email": "maria@gmail.com",
+        "senha_hash": "pbkdf2:sha256:1000000$ahguucFFy70ZOXtl$9ac6af91533a7cf64689ce55cdba39b34532bd282f196b188b0cf66f5ae223b6",
+        "foto_perfil": "static/uploads/usuario_4.jpg",
+        "data_cadastro": "2026-11-27 11:24:30",
+        "funcao": "comum",
+        "excluido": false
     }
 ]
